@@ -2,12 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { HistoricoEncontro } from '../checkin/entities/historico-encontro.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(HistoricoEncontro)
+    private readonly historicoRepo: Repository<HistoricoEncontro>,
   ) {}
 
   async findById(id: number): Promise<User> {
@@ -36,5 +39,43 @@ export class UsersService {
 
   async addHoras(userId: number, horas: number): Promise<void> {
     await this.userRepo.increment({ id: userId }, 'horas_complementares', horas);
+  }
+
+  async getHorasDetalhadas(userId: number): Promise<{
+    total: number;
+    sessoes: {
+      data: string;
+      hora_inicio: string;
+      hora_fim: string;
+      duracao_horas: number;
+      card_titulo: string;
+      aluno_nome: string;
+    }[];
+  }> {
+    const user = await this.findById(userId);
+
+    const historicos = await this.historicoRepo
+      .createQueryBuilder('h')
+      .innerJoinAndSelect('h.agendamento', 'ag')
+      .innerJoinAndSelect('ag.card', 'card')
+      .innerJoinAndSelect('card.aluno', 'aluno')
+      .where('ag.mentor_id = :userId', { userId })
+      .andWhere('h.horas_consolidadas = 1')
+      .orderBy('h.data_encontro', 'DESC')
+      .getMany();
+
+    const sessoes = historicos.map((h) => ({
+      data: h.data_encontro,
+      hora_inicio: h.agendamento.hora_inicio,
+      hora_fim: h.agendamento.hora_fim,
+      duracao_horas: Number(h.duracao_horas ?? 0),
+      card_titulo: h.agendamento.card?.titulo ?? '',
+      aluno_nome: h.agendamento.card?.aluno?.nome ?? '',
+    }));
+
+    return {
+      total: Number(user.horas_complementares ?? 0),
+      sessoes,
+    };
   }
 }

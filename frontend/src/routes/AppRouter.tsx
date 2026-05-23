@@ -14,7 +14,6 @@ import { AvaliarEncontro } from '../pages/aluno/AvaliarEncontro';
 
 // Mentor
 import { FeedMentoria } from '../pages/mentor/FeedMentoria';
-import { MinhasHoras } from '../pages/mentor/MinhasHoras';
 import { AbrirContestacao } from '../pages/mentor/AbrirContestacao';
 
 // Gestor
@@ -65,7 +64,6 @@ export const AppRouter: React.FC = () => (
         <Route path="/mentor"              element={<Navigate to="/mentor/agendamentos" replace />} />
         <Route path="/mentor/feed"         element={<MW roles={['ALUNO_MENTOR']}><FeedMentoria /></MW>} />
         <Route path="/mentor/agendamentos" element={<MW roles={['ALUNO_MENTOR']}><AgendamentosPage /></MW>} />
-        <Route path="/mentor/horas"        element={<MW roles={['ALUNO_MENTOR']}><MinhasHoras /></MW>} />
         <Route path="/mentor/contestacao"  element={<MW roles={['ALUNO_MENTOR']}><AbrirContestacao /></MW>} />
         <Route path="/mentor/conta"        element={<MW roles={['ALUNO_MENTOR']}><ContaPage /></MW>} />
 

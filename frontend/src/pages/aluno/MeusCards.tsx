@@ -124,11 +124,6 @@ function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: numbe
       border: isLive ? '1.5px solid var(--secondary)' : '1px solid transparent',
     }}>
       <div style={{ display: 'flex' }}>
-        {/* Status stripe */}
-        <div style={{
-          width: 4, background: stripeColor(card.status),
-          opacity: isDone ? 0.45 : 1, flexShrink: 0,
-        }}/>
         <div style={{ flex: 1, padding: 14 }}>
           {/* Title + Status */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
@@ -156,7 +151,7 @@ function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: numbe
               padding: 10, borderRadius: 12,
               background: isLive ? 'var(--secondary-light)' : 'var(--surface)',
               display: 'flex', alignItems: 'center', gap: 10,
-              marginBottom: (isLive || isAg) ? 10 : 0,
+              marginBottom: 10,
             }}>
               <Avatar initials={initials(mentor.nome)} color={grad} size={36}/>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -169,7 +164,7 @@ function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: numbe
           )}
 
           {/* CheckInOut + instrucoes + WhatsApp */}
-          {(isLive || isAg) && checkinData && mentor && (
+          {(isLive || isAg || isDone) && checkinData && mentor && (
             <>
               <CheckInOutCard c={checkinData}/>
               {ag?.instrucoes_gestor && (
@@ -230,8 +225,8 @@ function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: numbe
               <Link to="/aluno/avaliar" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginTop: 10, padding: '11px 14px', borderRadius: 12,
-                background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
-                boxShadow: '0 1px 0 rgba(191,54,12,0.25), 0 6px 16px rgba(230,74,25,0.25)',
+                background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                boxShadow: '0 1px 0 rgba(93,70,184,0.25), 0 6px 16px rgba(93,70,184,0.25)',
                 color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13,
                 textDecoration: 'none',
               }}>
@@ -273,7 +268,11 @@ export const MeusCards: React.FC = () => {
   const [filter, setFilter] = useState('todas');
 
   const load = () => api.get('/cards/meus').then((r) => setCards(r.data)).finally(() => setLoading(false));
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(); 
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const cancelar = async (id: number) => {
     if (!confirm('Cancelar este card?')) return;

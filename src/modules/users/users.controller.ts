@@ -14,6 +14,11 @@ export class UsersController {
     return this.usersService.findById(user.id);
   }
 
+  @Get('me/horas')
+  getHoras(@CurrentUser() user: any) {
+    return this.usersService.getHorasDetalhadas(user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findById(id);

@@ -349,17 +349,6 @@ export const LoginPage: React.FC = () => {
             ))}
           </div>
         </div>
-
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ height: 4, borderRadius: 99, flex: 6, background: 'rgba(255,255,255,0.18)' }}/>
-            <div style={{ height: 4, borderRadius: 99, flex: 3, background: 'var(--primary)' }}/>
-            <div style={{ height: 4, borderRadius: 99, flex: 1, background: 'var(--secondary)' }}/>
-          </div>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 8, fontFamily: 'var(--f-body)' }}>
-            Regra 60–30–10 · neutro · violeta · verde
-          </p>
-        </div>
       </div>
 
       {/* Desktop: right form side */}

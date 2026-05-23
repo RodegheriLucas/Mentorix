@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../config/api';
 import { DatePicker } from '../../components/ui/DatePicker';
+import { TimePicker } from '../../components/ui/TimePicker';
 
 interface DateSlot {
   data: string;
@@ -302,22 +303,10 @@ export const NovoCard: React.FC = () => {
             {/* Time + button row */}
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 110px' }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Início</label>
-                <input
-                  type="time"
-                  value={novaHoraInicio}
-                  onChange={(e) => setNovaHoraInicio(e.target.value)}
-                  style={{ ...inputStyle, padding: '10px 12px' }}
-                />
+                <TimePicker value={novaHoraInicio} onChange={setNovaHoraInicio} label="Início" placeholder="--:--" />
               </div>
               <div style={{ flex: '1 1 110px' }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Fim</label>
-                <input
-                  type="time"
-                  value={novaHoraFim}
-                  onChange={(e) => setNovaHoraFim(e.target.value)}
-                  style={{ ...inputStyle, padding: '10px 12px' }}
-                />
+                <TimePicker value={novaHoraFim} onChange={setNovaHoraFim} label="Fim" placeholder="--:--" />
               </div>
               <button
                 type="button"

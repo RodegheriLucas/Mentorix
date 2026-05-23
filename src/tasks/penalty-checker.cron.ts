@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CheckinService } from '../modules/checkin/checkin.service';
 import { PenaltiesService } from '../modules/penalties/penalties.service';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PenaltyCheckerCron {
@@ -10,6 +11,7 @@ export class PenaltyCheckerCron {
   constructor(
     private readonly checkinService: CheckinService,
     private readonly penaltiesService: PenaltiesService,
+    private readonly dataSource: DataSource,
   ) {}
 
   @Cron('*/5 * * * *')
@@ -32,6 +34,33 @@ export class PenaltyCheckerCron {
       }
     } catch (error) {
       this.logger.error('Erro no job de verificação de penalidades:', error);
+    }
+  }
+
+  @Cron('0 0 * * *') // Meia-noite
+  async expireOldCards(): Promise<void> {
+    this.logger.log('Verificando cards expirados...');
+
+    try {
+      const result = await this.dataSource.query(`
+        UPDATE cards_ajuda c
+        SET c.status = 'EXPIRADO'
+        WHERE c.status = 'ABERTO'
+          AND NOT EXISTS (
+            SELECT 1 FROM disponibilidades d
+            WHERE d.card_id = c.id AND d.data >= CURDATE()
+          )
+          AND EXISTS (
+            SELECT 1 FROM disponibilidades d2
+            WHERE d2.card_id = c.id
+          )
+      `);
+
+      if (result.affectedRows > 0) {
+        this.logger.warn(`${result.affectedRows} card(s) expirado(s) automaticamente.`);
+      }
+    } catch (error) {
+      this.logger.error('Erro no job de expiração de cards:', error);
     }
   }
 }

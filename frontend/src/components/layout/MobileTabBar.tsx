@@ -39,7 +39,6 @@ const ALUNO_TABS: TabItem[] = [
 const MENTOR_TABS: TabItem[] = [
   { to: '/mentor/feed',         label: 'Descobrir', icon: 'feed'     },
   { to: '/mentor/agendamentos', label: 'Agenda',    icon: 'agenda'   },
-  { to: '/mentor/horas',        label: 'Horas',     icon: 'horas'    },
   { to: '/mentor/contestacao',  label: 'Disputa',   icon: 'disputas' },
   { to: '/mentor/conta',        label: 'Conta',     icon: 'conta'    },
 ];

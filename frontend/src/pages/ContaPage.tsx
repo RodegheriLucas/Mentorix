@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MxLogo, Avatar } from '../components/ui/DesignSystem';
+import { Skeleton } from '../components/ui/Skeleton';
+import api from '../config/api';
 
 const AVATAR_GRADIENTS = [
   'linear-gradient(135deg,#6f5ad0,#4632a0)',
@@ -23,6 +25,20 @@ function initials(nome: string) {
   return nome?.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '??';
 }
 
+function fmtDate(iso: string) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('T')[0].split('-');
+  return new Date(Number(y), Number(m) - 1, Number(d))
+    .toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function fmtDuration(horas: number) {
+  const h = Math.floor(horas);
+  const min = Math.round((horas - h) * 60);
+  if (min === 0) return `${h}h`;
+  return `${h}h ${min}min`;
+}
+
 const ROLE_PT: Record<string, string> = {
   ALUNO: 'Aluno',
   ALUNO_MENTOR: 'Mentor',
@@ -37,9 +53,36 @@ const ROLE_BADGE_COLORS: Record<string, { bg: string; fg: string }> = {
   GESTOR: { bg: 'var(--accent-light)', fg: 'var(--accent-dark)' },
 };
 
+interface SessaoHora {
+  data: string;
+  hora_inicio: string;
+  hora_fim: string;
+  duracao_horas: number;
+  card_titulo: string;
+  aluno_nome: string;
+}
+
+interface HorasData {
+  total: number;
+  sessoes: SessaoHora[];
+}
+
 export const ContaPage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const [horasData, setHorasData] = useState<HorasData | null>(null);
+  const [loadingHoras, setLoadingHoras] = useState(false);
+
+  const isMentor = user?.papel === 'ALUNO_MENTOR' || user?.papel === 'PROFESSOR_MENTOR';
+
+  useEffect(() => {
+    if (!isMentor) return;
+    setLoadingHoras(true);
+    api.get('/users/me/horas')
+      .then((r) => setHorasData(r.data))
+      .finally(() => setLoadingHoras(false));
+  }, [isMentor]);
 
   if (!user) return null;
 
@@ -47,12 +90,14 @@ export const ContaPage: React.FC = () => {
   const ini = initials(user.nome);
   const roleLabel = ROLE_PT[user.papel] || user.papel;
   const roleBadge = ROLE_BADGE_COLORS[user.papel] || ROLE_BADGE_COLORS.ALUNO;
-  const firstName = user.nome.split(' ')[0];
 
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
   };
+
+  const totalHoras = horasData?.total ?? Number(user.horas_complementares ?? 0);
+  const sessoes = horasData?.sessoes ?? [];
 
   return (
     <div className="animate-fadeIn">
@@ -79,13 +124,10 @@ export const ContaPage: React.FC = () => {
         borderRadius: 18, overflow: 'hidden', marginBottom: 16,
         boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05)',
       }}>
-        {/* Gradient hero strip */}
         <div style={{
           height: 80,
-          background: `linear-gradient(135deg, ${grad.includes('4632a0') ? '#3A2885' : grad.includes('2854b4') ? '#1A3890' : grad.includes('5c3fc0') ? '#4A2E9A' : '#3A2885'} 0%, ${grad.match(/#[0-9a-f]{6}/gi)?.[0] || '#5D46B8'} 100%)`,
-          position: 'relative',
+          background: `linear-gradient(135deg, var(--primary-dark), var(--primary))`,
         }}/>
-        {/* Avatar overlapping strip */}
         <div style={{ background: '#fff', padding: '0 16px 20px', position: 'relative' }}>
           <div style={{
             position: 'absolute', top: -28, left: 16,
@@ -113,27 +155,169 @@ export const ContaPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats — mentors and professors only */}
-      {(user.papel === 'ALUNO_MENTOR' || user.papel === 'PROFESSOR_MENTOR') && (
+      {/* Stats — mentores e professores */}
+      {isMentor && (
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          {/* Horas acumuladas */}
           <div style={{
-            flex: 1, padding: '14px 16px', borderRadius: 14,
-            background: '#fff', border: '1px solid var(--border)',
+            flex: 1, padding: '16px', borderRadius: 14,
+            background: 'linear-gradient(135deg, var(--secondary-light), #d4edda)',
+            border: '1px solid rgba(46,125,50,0.15)',
+            display: 'flex', flexDirection: 'column', gap: 4,
           }}>
-            <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 22, color: 'var(--secondary)', letterSpacing: -0.5 }}>
-              {Number(user.horas_complementares || 0).toFixed(1)}h
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="var(--secondary)" strokeWidth="1.8"/>
+                <path d="M12 7v5l3 2" stroke="var(--secondary)" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--secondary-dark)' }}>
+                Horas acumuladas
+              </span>
             </div>
-            <div className="mx-caption" style={{ fontSize: 11, marginTop: 2 }}>Horas acumuladas</div>
+            <div style={{ fontFamily: 'var(--f-head)', fontWeight: 800, fontSize: 28, color: 'var(--secondary)', letterSpacing: -1, lineHeight: 1 }}>
+              {loadingHoras ? '—' : totalHoras.toFixed(1)}
+              <span style={{ fontSize: 14, fontWeight: 500, marginLeft: 3 }}>h</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--secondary-dark)', marginTop: 2 }}>
+              {loadingHoras ? '' : `${sessoes.length} sess${sessoes.length === 1 ? 'ão' : 'ões'} concluída${sessoes.length === 1 ? '' : 's'}`}
+            </div>
           </div>
+
+          {/* Competências */}
           <div style={{
-            flex: 1, padding: '14px 16px', borderRadius: 14,
-            background: '#fff', border: '1px solid var(--border)',
+            flex: 1, padding: '16px', borderRadius: 14,
+            background: 'var(--primary-light)',
+            border: '1px solid rgba(93,70,184,0.15)',
+            display: 'flex', flexDirection: 'column', gap: 4,
           }}>
-            <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 22, color: 'var(--primary)', letterSpacing: -0.5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" stroke="var(--primary)" strokeWidth="1.8" strokeLinejoin="round"/>
+              </svg>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--primary-dark)' }}>
+                Competências
+              </span>
+            </div>
+            <div style={{ fontFamily: 'var(--f-head)', fontWeight: 800, fontSize: 28, color: 'var(--primary)', letterSpacing: -1, lineHeight: 1 }}>
               {user.tags_competencia?.length ?? 0}
             </div>
-            <div className="mx-caption" style={{ fontSize: 11, marginTop: 2 }}>Competências</div>
+            <div style={{ fontSize: 11, color: 'var(--primary-dark)', marginTop: 2 }}>
+              assunto{(user.tags_competencia?.length ?? 0) !== 1 ? 's' : ''} cadastrado{(user.tags_competencia?.length ?? 0) !== 1 ? 's' : ''}
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Histórico de horas — só para mentores */}
+      {isMentor && (
+        <div style={{
+          borderRadius: 14, background: '#fff',
+          border: '1px solid var(--border)', marginBottom: 16, overflow: 'hidden',
+        }}>
+          {/* Cabeçalho da seção */}
+          <div style={{
+            padding: '14px 16px 12px',
+            borderBottom: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 30, height: 30, borderRadius: 9,
+                background: 'var(--secondary-light)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="var(--secondary)" strokeWidth="1.8"/>
+                  <path d="M12 7v5l3 2" stroke="var(--secondary)" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
+                Histórico de horas
+              </span>
+            </div>
+            {!loadingHoras && sessoes.length > 0 && (
+              <span style={{
+                fontSize: 11, fontWeight: 700,
+                color: 'var(--secondary-dark)', background: 'var(--secondary-light)',
+                padding: '2px 8px', borderRadius: 999,
+              }}>
+                {totalHoras.toFixed(1)}h total
+              </span>
+            )}
+          </div>
+
+          {/* Lista de sessões */}
+          {loadingHoras ? (
+            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[1, 2, 3].map((i) => <Skeleton key={i} height={64}/>)}
+            </div>
+          ) : sessoes.length === 0 ? (
+            <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 10px', display: 'block' }}>
+                <circle cx="12" cy="12" r="9" stroke="var(--text-3)" strokeWidth="1.5"/>
+                <path d="M12 7v5l3 2" stroke="var(--text-3)" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <p style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 500 }}>Nenhuma hora consolidada ainda</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+                As horas são contabilizadas após a avaliação do aluno.
+              </p>
+            </div>
+          ) : (
+            <div>
+              {sessoes.map((s, i) => (
+                <div key={i} style={{
+                  padding: '12px 16px',
+                  borderBottom: i < sessoes.length - 1 ? '1px solid var(--border)' : 'none',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                }}>
+                  {/* Badge de duração */}
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                    background: 'var(--secondary-light)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: 1,
+                  }}>
+                    <span style={{ fontFamily: 'var(--f-head)', fontWeight: 800, fontSize: 15, color: 'var(--secondary)', lineHeight: 1 }}>
+                      {fmtDuration(s.duracao_horas).split(' ')[0]}
+                    </span>
+                    {fmtDuration(s.duracao_horas).split(' ')[1] && (
+                      <span style={{ fontSize: 9, color: 'var(--secondary-dark)', fontWeight: 600 }}>
+                        {fmtDuration(s.duracao_horas).split(' ')[1]}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Informações da sessão */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 13, color: 'var(--text)', lineHeight: 1.3, marginBottom: 3 }}>
+                      {s.card_titulo || 'Mentoria'}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                          <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8"/>
+                          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                        </svg>
+                        {s.aluno_nome.split(' ')[0] || 'Aluno'}
+                      </span>
+                      <span style={{ color: 'var(--border)' }}>·</span>
+                      <span>{s.hora_inicio} – {s.hora_fim}</span>
+                    </div>
+                  </div>
+
+                  {/* Data */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-3)', fontWeight: 500, lineHeight: 1.4 }}>
+                      {fmtDate(s.data).split(',')[0]}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-2)', fontWeight: 600 }}>
+                      {fmtDate(s.data).split(',')[1]?.trim()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -160,7 +344,7 @@ export const ContaPage: React.FC = () => {
         </div>
       )}
 
-      {/* Contact */}
+      {/* Telefone */}
       {user.telefone && (
         <div style={{
           padding: '14px 16px', borderRadius: 14,
@@ -175,7 +359,8 @@ export const ContaPage: React.FC = () => {
             <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', marginTop: 3 }}>{user.telefone}</div>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.37 18 19.45 19.45 0 0 1 3 9.63 19.79 19.79 0 0 1 .08 1.04 2 2 0 0 1 2.06 0h3a2 2 0 0 1 2 1.72c.13 1 .38 1.97.73 2.9a2 2 0 0 1-.45 2.11L6.09 7.91A16 16 0 0 0 12 13.82l1.27-1.27a2 2 0 0 1 2.11-.45c.93.35 1.9.6 2.9.73A2 2 0 0 1 20 15z" stroke="var(--text-3)" strokeWidth="1.8" strokeLinecap="round"/>
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.37 18 19.45 19.45 0 0 1 3 9.63 19.79 19.79 0 0 1 .08 1.04 2 2 0 0 1 2.06 0h3a2 2 0 0 1 2 1.72c.13 1 .38 1.97.73 2.9a2 2 0 0 1-.45 2.11L6.09 7.91A16 16 0 0 0 12 13.82l1.27-1.27a2 2 0 0 1 2.11-.45c.93.35 1.9.6 2.9.73A2 2 0 0 1 20 15z"
+              stroke="var(--text-3)" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
         </div>
       )}

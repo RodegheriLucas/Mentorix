@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import api from '../../config/api';
 import { Avatar, TopicBadge, MxLogo } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -29,37 +29,29 @@ function matchRatio(mentorTopics: string[], cardTopics: string[]) {
   return cardTopics.filter((t) => mentorTopics.includes(t)).length / cardTopics.length;
 }
 
-function heatColor(ratio: number) {
-  if (ratio >= 0.8) return { core: '#5D46B8', label: 'Forte' };
-  if (ratio >= 0.5) return { core: '#9C7BE0', label: 'Bom' };
-  if (ratio >= 0.25) return { core: '#E8B33A', label: 'Parcial' };
-  return { core: '#E64A19', label: 'Baixo' };
+// Escala cinza claro (#E8E6F0) → roxo primário (#5D46B8) conforme o ratio
+function interpolateHeatColor(ratio: number): string {
+  const r = Math.min(1, Math.max(0, ratio));
+  const red   = Math.round(232 - 139 * r); // 232→93
+  const green = Math.round(230 - 160 * r); // 230→70
+  const blue  = Math.round(240 - 56  * r); // 240→184
+  return `rgb(${red},${green},${blue})`;
 }
 
-function MatchBar({ ratio }: { ratio: number }) {
-  const h = heatColor(ratio);
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-        <span style={{
-          fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8,
-          color: h.core, fontFamily: 'var(--f-body)',
-        }}>Match {h.label}</span>
-        <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 12, color: 'var(--text)' }}>
-          {Math.round(ratio * 100)}%
-        </span>
-      </div>
-      <div style={{ height: 4, borderRadius: 99, background: '#F1F1F4', overflow: 'hidden' }}>
-        <div style={{
-          width: `${ratio * 100}%`, height: '100%', borderRadius: 99,
-          background: `linear-gradient(90deg, ${h.core}66, ${h.core})`,
-          transition: 'width .4s ease',
-        }}/>
-      </div>
-    </div>
-  );
+function heatLabel(ratio: number): string {
+  if (ratio >= 0.8) return 'Match Forte';
+  if (ratio >= 0.5) return 'Match Bom';
+  if (ratio >= 0.25) return 'Match Parcial';
+  if (ratio > 0)    return 'Match Baixo';
+  return 'Sem match';
 }
 
+// Branco passa WCAG AA somente quando o fundo é escuro o suficiente (~75% de match)
+function needsWhiteText(ratio: number): boolean {
+  return ratio >= 0.75;
+}
+
+// ── SlotModal ─────────────────────────────────────────────────
 interface SlotModalProps {
   card: any;
   slots: any[];
@@ -85,7 +77,6 @@ function SlotModal({ card, slots, loading, selectedSlot, onSelectSlot, onConfirm
         boxShadow: '0 -8px 40px rgba(0,0,0,0.2)',
         maxHeight: 680, overflowY: 'auto',
       }}>
-        {/* Handle */}
         <div style={{
           width: 36, height: 4, borderRadius: 99,
           background: 'var(--border)', margin: '0 auto 18px',
@@ -104,7 +95,7 @@ function SlotModal({ card, slots, loading, selectedSlot, onSelectSlot, onConfirm
 
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[1,2,3].map((i) => <Skeleton key={i} height={56}/>)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} height={56}/>)}
           </div>
         ) : slots.length === 0 ? (
           <p style={{ color: 'var(--text-3)', textAlign: 'center', padding: '20px 0', fontSize: 13 }}>
@@ -166,19 +157,50 @@ function SlotModal({ card, slots, loading, selectedSlot, onSelectSlot, onConfirm
   );
 }
 
+// ── FeedCard ──────────────────────────────────────────────────
 function FeedCard({ card, mentorTopics, onAccept }: { card: any; mentorTopics: string[]; onAccept: (c: any) => void }) {
   const [expanded, setExpanded] = useState(false);
 
   const cardTopics: string[] = card.tags || [];
-  const ratio = matchRatio(mentorTopics, cardTopics);
-  const hotTopics = cardTopics.filter((t) => mentorTopics.includes(t));
-  const hasMentorTopics = mentorTopics.length > 0;
+  const ratio      = matchRatio(mentorTopics, cardTopics);
+  const hotTopics  = cardTopics.filter((t) => mentorTopics.includes(t));
+  const hasMentor  = mentorTopics.length > 0;
+  const isFullMatch = hasMentor && ratio >= 1;
 
-  const aluno = card.aluno || {};
-  const grad = avatarGrad(aluno.nome || '?');
-  const curso: string = aluno.curso || '';
-  const periodo: string = aluno.periodo || aluno.semestre || '';
+  // Cor de topo: cinza claro (#E8E6F0) → roxo (#5D46B8) proporcional ao ratio
+  const topColor  = interpolateHeatColor(hasMentor ? ratio : 0);
+  const whiteText = hasMentor && needsWhiteText(ratio);
+
+  // Tokens adaptativos: fundo claro → texto escuro / fundo escuro → texto branco
+  const clr = {
+    label:    whiteText ? 'rgba(255,255,255,0.78)' : 'var(--primary-dark)',
+    pct:      whiteText ? '#fff'                    : 'var(--primary-dark)',
+    name:     whiteText ? '#fff'                    : 'var(--text)',
+    meta:     whiteText ? 'rgba(255,255,255,0.7)'   : 'var(--text-2)',
+    barTrack: whiteText ? 'rgba(255,255,255,0.25)'  : 'rgba(93,70,184,0.15)',
+    barFill:  whiteText ? 'rgba(255,255,255,0.92)'  : '#5D46B8',
+    chevron:  whiteText ? '#fff'                    : 'var(--primary)',
+    chevronBg:whiteText ? 'rgba(255,255,255,0.18)'  : 'rgba(93,70,184,0.08)',
+    chevronBorder: whiteText ? 'rgba(255,255,255,0.3)' : 'rgba(93,70,184,0.2)',
+    ring:     whiteText ? 'rgba(255,255,255,0.45)'  : 'rgba(93,70,184,0.3)',
+    // Tokens para corpo e footer (só mudam no full match)
+    bodyTitle:   isFullMatch ? '#fff'                     : 'var(--text)',
+    bodyDesc:    isFullMatch ? 'rgba(255,255,255,0.8)'    : 'var(--text-2)',
+    footerBorder:isFullMatch ? 'rgba(255,255,255,0.18)'   : 'var(--border)',
+    footerIcon:  isFullMatch ? 'rgba(255,255,255,0.65)'   : 'var(--text-3)',
+    footerCaption:isFullMatch ? 'rgba(255,255,255,0.7)'   : undefined,
+    btnBg:       isFullMatch ? 'rgba(255,255,255,0.95)'   : 'linear-gradient(135deg, #5D46B8, #3A2885)',
+    btnColor:    isFullMatch ? '#3A2885'                   : '#fff',
+    btnShadow:   isFullMatch ? '0 2px 10px rgba(0,0,0,0.15)' : '0 2px 10px rgba(93,70,184,0.32)',
+    btnArrow:    isFullMatch ? '#3A2885'                   : '#fff',
+  };
+
+  const aluno    = card.aluno || {};
+  const grad     = avatarGrad(aluno.nome || '?');
+  const curso    = aluno.curso || '';
+  const periodo  = aluno.periodo || aluno.semestre || '';
   const metaLine = [curso, periodo].filter(Boolean).join(' · ');
+  const slotCount = card.disponibilidades?.length ?? 0;
 
   return (
     <div
@@ -186,95 +208,148 @@ function FeedCard({ card, mentorTopics, onAccept }: { card: any; mentorTopics: s
       className="mx-card"
       style={{
         overflow: 'hidden', cursor: 'pointer',
-        border: expanded ? '1.5px solid var(--primary)' : '1px solid transparent',
-        transition: 'border-color 0.15s',
+        // Full match → roxo sólido; parcial → gradiente heat → branco
+        background: isFullMatch
+          ? 'linear-gradient(135deg, #5D46B8 0%, #3A2885 100%)'
+          : `linear-gradient(180deg, ${topColor} 0%, #ffffff 75%)`,
+        border: isFullMatch ? '1.5px solid rgba(255,255,255,0.15)' : undefined,
+        ...(!isFullMatch && { border: expanded ? `1.5px solid ${topColor}` : '1px solid var(--border)' }),
+        transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+        boxShadow: expanded
+          ? '0 8px 28px rgba(93,70,184,0.18), 0 1px 2px rgba(18,18,18,0.06)'
+          : '0 1px 2px rgba(18,18,18,0.05)',
       }}
     >
-      {/* Match bar */}
-      {hasMentorTopics && (
-        <div style={{ padding: '12px 14px 0' }}>
-          <MatchBar ratio={ratio}/>
-        </div>
-      )}
+      {/* ── Header (transparente — gradiente vem do card) ── */}
+      <div style={{ padding: '14px 14px 16px' }}>
 
-      <div style={{ padding: hasMentorTopics ? '0 14px 14px' : '14px' }}>
-        {/* Aluno row: avatar + info + status dot */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <Avatar initials={initials(aluno.nome || '?')} color={grad} size={38}/>
+        {/* Linha de match */}
+        <div style={{ marginBottom: 12 }}>
+          {hasMentor ? (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <span style={{
+                  fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
+                  color: clr.label, fontFamily: 'var(--f-body)',
+                }}>
+                  {heatLabel(ratio)}
+                </span>
+                <span style={{ fontFamily: 'var(--f-head)', fontWeight: 800, fontSize: 14, color: clr.pct, letterSpacing: -0.3 }}>
+                  {Math.round(ratio * 100)}%
+                </span>
+              </div>
+              {/* Barra de progresso */}
+              <div style={{ height: 4, borderRadius: 99, background: clr.barTrack, overflow: 'hidden' }}>
+                <div style={{
+                  width: `${ratio * 100}%`, height: '100%', borderRadius: 99,
+                  background: clr.barFill, transition: 'width .5s ease',
+                }}/>
+              </div>
+            </>
+          ) : (
+            <span style={{
+              fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
+              color: 'var(--text-3)', fontFamily: 'var(--f-body)',
+            }}>
+              Nova solicitação
+            </span>
+          )}
+        </div>
+
+        {/* Linha do aluno */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ boxShadow: `0 0 0 2.5px ${clr.ring}`, borderRadius: '50%', flexShrink: 0 }}>
+            <Avatar initials={initials(aluno.nome || '?')} color={grad} size={40}/>
+          </div>
+
           <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: clr.name, lineHeight: 1.2, letterSpacing: -0.2 }}>
+              {aluno.nome || '—'}
+            </div>
             {metaLine && (
-              <div className="mx-caption" style={{ fontSize: 10, marginBottom: 2, color: 'var(--text-3)' }}>
+              <div style={{ fontSize: 11, color: clr.meta, marginTop: 2, fontFamily: 'var(--f-body)' }}>
                 {metaLine}
               </div>
             )}
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.2 }}>
-              {aluno.nome || '—'}
-            </div>
           </div>
-          {/* Expand/collapse indicator */}
+
+          {/* Chevron de expandir */}
           <div style={{
-            width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-            background: expanded ? 'var(--primary)' : 'var(--surface)',
+            width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+            background: clr.chevronBg, border: `1px solid ${clr.chevronBorder}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.15s',
           }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-              style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-              <path d="M6 9l6 6 6-6" stroke={expanded ? '#fff' : 'var(--text-3)'} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+              style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.22s' }}>
+              <path d="M6 9l6 6 6-6" stroke={clr.chevron} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         </div>
+      </div>
 
-        {/* Title */}
-        <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 14, lineHeight: 1.3, color: 'var(--text)', marginBottom: 10 }}>
+      {/* ── Corpo (área branca do gradiente) ── */}
+      <div style={{ padding: '12px 14px 0' }}>
+        <div style={{
+          fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 14,
+          lineHeight: 1.35, color: clr.bodyTitle, marginBottom: 10,
+        }}>
           {card.titulo}
         </div>
 
-        {/* Description — only when expanded */}
         {expanded && card.descricao && (
           <p style={{
-            fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, marginBottom: 12,
-            fontFamily: 'var(--f-body)',
-            animation: 'mxFadeIn 0.2s ease',
+            fontSize: 13, color: clr.bodyDesc, lineHeight: 1.55, marginBottom: 12,
+            fontFamily: 'var(--f-body)', animation: 'mxFadeIn 0.18s ease',
           }}>
             {card.descricao}
           </p>
         )}
 
-        {/* Topics */}
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
-          {cardTopics.map((t) => (
-            <TopicBadge key={t} tone={hotTopics.includes(t) ? 'accent' : 'gray'}>
-              {hotTopics.includes(t) && (
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-                  <path d="M12 2C9 6 6 8 6 13a6 6 0 1 0 12 0c0-2-1-3-1-5 0-3-3-5-5-6z"/>
-                </svg>
-              )}
-              #{t}
-            </TopicBadge>
-          ))}
-        </div>
+        {cardTopics.length > 0 && (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
+            {cardTopics.map((t) => (
+              <TopicBadge key={t} tone={isFullMatch ? 'accent' : (hotTopics.includes(t) ? 'accent' : 'gray')}>
+                {hotTopics.includes(t) && (
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                    <path d="M12 2C9 6 6 8 6 13a6 6 0 1 0 12 0c0-2-1-3-1-5 0-3-3-5-5-6z"/>
+                  </svg>
+                )}
+                #{t}
+              </TopicBadge>
+            ))}
+          </div>
+        )}
+      </div>
 
-        {/* Footer */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          paddingTop: 10, borderTop: '1px solid var(--border)',
-        }}>
-          <span className="mx-caption" style={{ fontSize: 11 }}>
-            {card.disponibilidades?.length ?? 0} slot{(card.disponibilidades?.length ?? 0) !== 1 ? 's' : ''} disponível
+      {/* ── Footer ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 14px 14px', borderTop: `1px solid ${clr.footerBorder}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="3" stroke={clr.footerIcon} strokeWidth="1.8" fill="none"/>
+            <path d="M3 10h18M8 4v6M16 4v6" stroke={clr.footerIcon} strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+          <span className="mx-caption" style={{ fontSize: 11, ...(clr.footerCaption && { color: clr.footerCaption }) }}>
+            {slotCount} slot{slotCount !== 1 ? 's' : ''} disponível{slotCount !== 1 ? 'is' : ''}
           </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onAccept(card); }}
-            style={{
-              padding: '8px 14px', borderRadius: 10, border: 0, cursor: 'pointer',
-              background: 'linear-gradient(135deg, #5D46B8, #3A2885)',
-              color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 12,
-              boxShadow: '0 2px 8px rgba(93,70,184,0.3)',
-            }}
-          >
-            Ver slots →
-          </button>
         </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); onAccept(card); }}
+          style={{
+            padding: '8px 16px', borderRadius: 10, border: 0, cursor: 'pointer',
+            background: clr.btnBg,
+            color: clr.btnColor, fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 12,
+            boxShadow: clr.btnShadow,
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}
+        >
+          Ver slots
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke={clr.btnArrow} strokeWidth="2.2" strokeLinecap="round"/>
+          </svg>
+        </button>
       </div>
 
       <style>{`@keyframes mxFadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }`}</style>
@@ -282,6 +357,7 @@ function FeedCard({ card, mentorTopics, onAccept }: { card: any; mentorTopics: s
   );
 }
 
+// ── FeedMentoria (página principal) ──────────────────────────
 export const FeedMentoria: React.FC = () => {
   const { user } = useAuth();
   const [cards, setCards] = useState<any[]>([]);
@@ -298,6 +374,21 @@ export const FeedMentoria: React.FC = () => {
   useEffect(() => {
     api.get('/feed').then((r) => setCards(r.data)).finally(() => setLoading(false));
   }, []);
+
+  // Filtra cards com pelo menos 1 match e ordena por maior match primeiro
+  const filteredCards = useMemo(() => {
+    if (!mentorTopics.length) return cards;
+    return cards
+      .filter((card) => {
+        const cardTopics: string[] = card.tags || [];
+        return cardTopics.some((t) => mentorTopics.includes(t));
+      })
+      .sort((a, b) => {
+        const ratioA = matchRatio(mentorTopics, a.tags || []);
+        const ratioB = matchRatio(mentorTopics, b.tags || []);
+        return ratioB - ratioA;
+      });
+  }, [cards, mentorTopics]);
 
   const openAccept = async (card: any) => {
     setSelectedCard(card);
@@ -354,11 +445,11 @@ export const FeedMentoria: React.FC = () => {
           {isTCC ? 'Feed TCC' : 'Descobrir'}
         </h1>
         <p className="mx-caption" style={{ marginTop: 2 }}>
-          {loading ? '…' : `${cards.length} solicitaç${cards.length === 1 ? 'ão' : 'ões'} disponível${cards.length !== 1 ? 'is' : ''}`}
+          {loading ? '…' : `${filteredCards.length} solicitação${filteredCards.length !== 1 ? 'ões' : ''} disponível${filteredCards.length !== 1 ? 'is' : ''}`}
         </p>
       </div>
 
-      {/* Your topics */}
+      {/* Seus assuntos */}
       {mentorTopics.length > 0 && (
         <div style={{
           marginBottom: 14, padding: '10px 12px', borderRadius: 12,
@@ -380,11 +471,11 @@ export const FeedMentoria: React.FC = () => {
 
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1,2,3].map((i) => <Skeleton key={i} height={160}/>)}
+          {[1, 2, 3].map((i) => <Skeleton key={i} height={180}/>)}
         </div>
       )}
 
-      {!loading && cards.length === 0 && (
+      {!loading && filteredCards.length === 0 && (
         <div className="mx-card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>
           <div style={{
             width: 52, height: 52, borderRadius: 16, margin: '0 auto 14px',
@@ -402,7 +493,7 @@ export const FeedMentoria: React.FC = () => {
 
       {!loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {cards.map((card) => (
+          {filteredCards.map((card) => (
             <FeedCard
               key={card.id}
               card={card}

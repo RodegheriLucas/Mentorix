@@ -78,7 +78,7 @@ export class AvaliacoesService {
         h.checkin_em,
         h.checkout_em,
         h.duracao_horas,
-        a.dia_semana,
+        a.data AS dia_semana,
         a.hora_inicio,
         a.hora_fim,
         c.titulo AS card_titulo,
@@ -93,6 +93,37 @@ export class AvaliacoesService {
         AND h.checkout_em IS NOT NULL
         AND h.id NOT IN (SELECT historico_id FROM avaliacoes)
       ORDER BY h.data_encontro DESC
+    `, [alunoId]);
+
+    return rows.map((r: any) => ({
+      ...r,
+      card_tags: typeof r.card_tags === 'string' ? JSON.parse(r.card_tags) : r.card_tags,
+    }));
+  }
+
+  async findHistorico(alunoId: number): Promise<any[]> {
+    const rows = await this.historicoRepo.query(`
+      SELECT
+        av.id AS avaliacao_id,
+        av.nota,
+        av.depoimento,
+        av.criado_em AS avaliado_em,
+        h.data_encontro,
+        h.duracao_horas,
+        a.hora_inicio,
+        a.hora_fim,
+        a.data AS dia_semana,
+        c.titulo AS card_titulo,
+        c.tags  AS card_tags,
+        u.nome  AS mentor_nome,
+        u.avatar_url AS mentor_avatar
+      FROM avaliacoes av
+      JOIN historico_encontros h ON av.historico_id = h.id
+      JOIN agendamentos a ON h.agendamento_id = a.id
+      JOIN cards_ajuda c  ON a.card_id = c.id
+      JOIN usuarios u     ON a.mentor_id = u.id
+      WHERE av.aluno_id = ?
+      ORDER BY av.criado_em DESC
     `, [alunoId]);
 
     return rows.map((r: any) => ({

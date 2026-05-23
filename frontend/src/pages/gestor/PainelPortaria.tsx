@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import api from '../../config/api';
-import { Avatar, StatusPill } from '../../components/ui/DesignSystem';
+import { Avatar } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { useAuth } from '../../contexts/AuthContext';
@@ -46,7 +46,29 @@ const STATUS_COLORS: Record<string, { bg: string; fg: string; dot: string }> = {
   CANCELADO:       { bg: '#FFEBEE', fg: 'var(--accent-dark)', dot: 'var(--accent-dark)' },
 };
 
-// ── Column header ─────────────────────────────────────────────
+// ── SectionBadge ──────────────────────────────────────────────
+function SectionBadge({ icon, label, sub }: { icon: React.ReactNode; label: string; sub: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22 }}>
+      <div style={{
+        width: 44, height: 44, borderRadius: 13, flexShrink: 0,
+        background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 14px rgba(93,70,184,0.28)',
+      }}>
+        {icon}
+      </div>
+      <div>
+        <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 20, color: 'var(--text)', lineHeight: 1.2 }}>
+          {label}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── ColumnHeader ───────────────────────────────────────────────
 function ColumnHeader({ title, count, tone }: { title: string; count: number; tone: 'yellow' | 'accent' | 'green' }) {
   const toneStyles = {
     yellow: { bg: '#FFF7E0', dot: '#E0A800', fg: '#7A5B00' },
@@ -60,20 +82,20 @@ function ColumnHeader({ title, count, tone }: { title: string; count: number; to
       background: toneStyles.bg, marginBottom: 10,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: toneStyles.dot, display: 'inline-block' }}/>
-        <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 13, color: toneStyles.fg, letterSpacing: 0.2 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: toneStyles.dot, display: 'inline-block', flexShrink: 0 }}/>
+        <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 12, color: toneStyles.fg, letterSpacing: 0.2 }}>
           {title}
         </span>
       </div>
       <span style={{
-        fontSize: 12, fontWeight: 700, padding: '2px 10px', borderRadius: 999,
-        background: '#fff', color: toneStyles.fg,
+        fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 999,
+        background: '#fff', color: toneStyles.fg, flexShrink: 0,
       }}>{count}</span>
     </div>
   );
 }
 
-// ── AgendamentoCard (today kanban) ────────────────────────────
+// ── AgendamentoCard (kanban de hoje) ───────────────────────────
 function AgendamentoCard({
   ag, onAction, flashing, checkinLoading,
 }: {
@@ -94,42 +116,42 @@ function AgendamentoCard({
 
   return (
     <div className="mx-card" style={{
-      padding: 12, marginBottom: 8,
+      padding: 14, marginBottom: 8,
       border: flashing ? '1.5px solid var(--secondary)' : '1px solid transparent',
       background: flashing ? 'var(--secondary-light)' : '#fff',
       transition: 'background .4s ease',
     }}>
-      <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 13, color: 'var(--text)', marginBottom: 8, lineHeight: 1.25 }}>
+      <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 13, color: 'var(--text)', marginBottom: 10, lineHeight: 1.3 }}>
         {ag.card?.titulo || 'Mentoria'}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <Avatar initials={initials(alunoName)} color={avatarGrad(ag.id % 6)} size={24}/>
-        <span style={{ fontSize: 11, color: 'var(--text-2)' }}>{alunoName.split(' ')[0]}</span>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <Avatar initials={initials(alunoName)} color={avatarGrad(ag.id % 6)} size={26}/>
+        <span style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 500 }}>{alunoName.split(' ')[0]}</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
           <path d="M5 12h14M13 6l6 6-6 6" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/>
         </svg>
-        <Avatar initials={initials(mentorName)} color={avatarGrad((ag.id + 3) % 6)} size={24}/>
-        <span style={{ fontSize: 11, color: 'var(--text-2)' }}>{mentorName.split(' ')[0]}</span>
+        <Avatar initials={initials(mentorName)} color={avatarGrad((ag.id + 3) % 6)} size={26}/>
+        <span style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 500 }}>{mentorName.split(' ')[0]}</span>
       </div>
 
       <div style={{
-        padding: '8px 10px', borderRadius: 8, background: 'var(--surface)',
-        display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 8,
+        padding: '9px 12px', borderRadius: 9, background: 'var(--surface)',
+        display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 10,
       }}>
-        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
-          {ag.dia_semana} · {ag.hora_inicio}–{ag.hora_fim}
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>
+          {ag.hora_inicio} – {ag.hora_fim}
         </div>
         <div className="mx-caption" style={{ fontSize: 11 }}>{sala}</div>
       </div>
 
       {ag.instrucoes_gestor && (
-        <div className="mx-caption" style={{
-          fontSize: 11, padding: '6px 8px', background: 'var(--primary-light)',
-          color: 'var(--primary-dark)', borderRadius: 7, marginBottom: 8,
-          display: 'flex', alignItems: 'flex-start', gap: 6,
+        <div style={{
+          fontSize: 11, padding: '7px 10px', background: 'var(--primary-light)',
+          color: 'var(--primary-dark)', borderRadius: 8, marginBottom: 10,
+          display: 'flex', alignItems: 'flex-start', gap: 7,
         }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
             <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
             <path d="M12 8v5M12 16v.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
@@ -138,8 +160,11 @@ function AgendamentoCard({
       )}
 
       {ag.checkin_em && (
-        <div className="mx-caption" style={{ fontSize: 11, color: 'var(--secondary-dark)', fontWeight: 500, marginBottom: 8 }}>
-          ✓ check-in realizado
+        <div style={{ fontSize: 11, color: 'var(--secondary-dark)', fontWeight: 600, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Check-in realizado
         </div>
       )}
 
@@ -149,7 +174,7 @@ function AgendamentoCard({
         disabled={checkinLoading}
         style={{ width: '100%', padding: '9px 0', fontSize: 12, fontWeight: 600 }}
       >
-        {checkinLoading ? '...' : actionLabel}
+        {checkinLoading ? '…' : actionLabel}
       </button>
     </div>
   );
@@ -183,16 +208,16 @@ function InstrucoesModal({ open, ag, onClose, onSend, saving }: {
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        width: 480, background: '#fff', borderRadius: 18, padding: 24,
+        width: 480, background: '#fff', borderRadius: 18, padding: 28,
         boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
       }}>
-        <div className="mx-caption" style={{
-          fontFamily: 'var(--f-body)', textTransform: 'uppercase', fontSize: 10, fontWeight: 600,
-          letterSpacing: 1, color: 'var(--primary)', marginBottom: 4,
+        <div style={{
+          fontFamily: 'var(--f-body)', textTransform: 'uppercase', fontSize: 10, fontWeight: 700,
+          letterSpacing: 1.2, color: 'var(--primary)', marginBottom: 6,
         }}>Aprovar mentoria</div>
         <h2 className="mx-h2" style={{ fontWeight: 700, marginBottom: 4 }}>{ag.card?.titulo}</h2>
-        <p className="mx-caption" style={{ marginBottom: 14 }}>
-          {ag.card?.aluno?.nome} · {ag.mentor?.nome} · {ag.dia_semana} {ag.hora_inicio}–{ag.hora_fim}
+        <p className="mx-caption" style={{ marginBottom: 18 }}>
+          {ag.card?.aluno?.nome} · {ag.mentor?.nome} · {ag.hora_inicio} – {ag.hora_fim}
         </p>
         <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Instruções para aluno e mentor</label>
         <textarea
@@ -210,9 +235,9 @@ function InstrucoesModal({ open, ag, onClose, onSend, saving }: {
           Após enviar, as instruções são <strong>imutáveis</strong>. Aluno e mentor recebem notificação.
         </div>
         {error && <p style={{ color: 'var(--accent)', fontSize: 12, marginTop: 8 }}>{error}</p>}
-        <div style={{ display: 'flex', gap: 10, marginTop: 18, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} className="mx-btn ghost" style={{ padding: '10px 16px' }}>Cancelar</button>
-          <button onClick={handleSend} className="mx-btn" style={{ padding: '10px 16px' }} disabled={saving}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} className="mx-btn ghost" style={{ padding: '10px 18px' }}>Cancelar</button>
+          <button onClick={handleSend} className="mx-btn" style={{ padding: '10px 18px' }} disabled={saving}>
             {saving ? 'Enviando…' : 'Enviar & marcar como Agendado'}
           </button>
         </div>
@@ -225,13 +250,13 @@ function InstrucoesModal({ open, ag, onClose, onSend, saving }: {
 function EmptyCol({ label }: { label: string }) {
   return (
     <div style={{
-      padding: '24px 12px', borderRadius: 10, textAlign: 'center',
+      padding: '20px 12px', borderRadius: 10, textAlign: 'center',
       border: '1.5px dashed var(--border)', color: 'var(--text-3)', fontSize: 12,
     }}>{label}</div>
   );
 }
 
-// ── Chip (filter toggle) ──────────────────────────────────────
+// ── Chip (filtro toggle) ───────────────────────────────────────
 function Chip({
   label, active, onClick, dot,
 }: { label: string; active: boolean; onClick: () => void; dot?: string }) {
@@ -239,21 +264,22 @@ function Chip({
     <button
       onClick={onClick}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 5,
-        padding: '4px 10px', borderRadius: 999, border: 'none',
-        cursor: 'pointer', fontSize: 11, fontWeight: active ? 700 : 400,
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '5px 13px', borderRadius: 999, border: 'none',
+        cursor: 'pointer', fontSize: 12, fontWeight: active ? 700 : 500,
         fontFamily: 'var(--f-body)',
-        background: active ? 'var(--primary)' : 'var(--surface)',
+        background: active ? 'var(--primary)' : '#fff',
         color: active ? '#fff' : 'var(--text-2)',
         transition: 'all 0.15s',
         outline: active ? 'none' : '1px solid var(--border)',
         whiteSpace: 'nowrap',
+        boxShadow: active ? '0 2px 8px rgba(93,70,184,0.22)' : 'none',
       }}
     >
       {dot && (
         <span style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: active ? 'rgba(255,255,255,0.7)' : dot,
+          width: 7, height: 7, borderRadius: '50%',
+          background: active ? 'rgba(255,255,255,0.8)' : dot,
           display: 'inline-block', flexShrink: 0,
         }}/>
       )}
@@ -262,7 +288,7 @@ function Chip({
   );
 }
 
-// ── UpcomingCard (card no painel direito) ─────────────────────
+// ── UpcomingCard (card do painel de salas) ─────────────────────
 function UpcomingCard({ ag }: { ag: any }) {
   const alunoName = ag.card?.aluno?.nome || 'Aluno';
   const mentorName = ag.mentor?.nome || 'Mentor';
@@ -271,63 +297,67 @@ function UpcomingCard({ ag }: { ag: any }) {
 
   return (
     <div style={{
-      padding: '10px 12px', borderRadius: 10, background: '#fff',
-      border: '1px solid var(--border)', marginBottom: 6,
-      borderLeft: `3px solid ${sc.dot}`,
+      padding: '14px 16px', borderRadius: 12, background: '#fff',
+      border: '1px solid var(--border)', marginBottom: 8,
+      borderLeft: `4px solid ${sc.dot}`,
+      boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
     }}>
-      {/* title + status */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-        <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 12, color: 'var(--text)', lineHeight: 1.3, flex: 1 }}>
+      {/* título + pill */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+        <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 13, color: 'var(--text)', lineHeight: 1.35, flex: 1 }}>
           {ag.card?.titulo || 'Mentoria'}
         </span>
         <span style={{
-          fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+          fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999,
           background: sc.bg, color: sc.fg, whiteSpace: 'nowrap', flexShrink: 0,
-          textTransform: 'uppercase', letterSpacing: 0.4,
+          textTransform: 'uppercase', letterSpacing: 0.5,
         }}>
           {STATUS_LABEL[ag.status]}
         </span>
       </div>
 
-      {/* people row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
-        <Avatar initials={initials(alunoName)} color={avatarGrad(ag.id % 6)} size={20}/>
-        <span style={{ fontSize: 10, color: 'var(--text-2)' }}>{alunoName.split(' ')[0]}</span>
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+      {/* pessoas */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <Avatar initials={initials(alunoName)} color={avatarGrad(ag.id % 6)} size={28}/>
+        <span style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 500 }}>{alunoName.split(' ')[0]}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
           <path d="M5 12h14M13 6l6 6-6 6" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/>
         </svg>
-        <Avatar initials={initials(mentorName)} color={avatarGrad((ag.id + 3) % 6)} size={20}/>
-        <span style={{ fontSize: 10, color: 'var(--text-2)' }}>{mentorName.split(' ')[0]}</span>
+        <Avatar initials={initials(mentorName)} color={avatarGrad((ag.id + 3) % 6)} size={28}/>
+        <span style={{ fontSize: 12, color: 'var(--text-2)', fontWeight: 500 }}>{mentorName.split(' ')[0]}</span>
       </div>
 
-      {/* time + sala row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* horário + sala */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 4,
-          padding: '3px 8px', borderRadius: 6, background: 'var(--surface)',
-          fontSize: 10, color: 'var(--text)', fontWeight: 500,
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '5px 10px', borderRadius: 8, background: 'var(--surface)',
+          fontSize: 12, color: 'var(--text)', fontWeight: 600, flexShrink: 0,
         }}>
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="9" stroke="var(--text-3)" strokeWidth="2"/>
-            <path d="M12 7v5l3 2" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="var(--text-3)" strokeWidth="1.8" fill="none"/>
+            <path d="M12 7v5l3 2" stroke="var(--text-3)" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
-          {ag.hora_inicio}–{ag.hora_fim}
+          {ag.hora_inicio} – {ag.hora_fim}
         </div>
+
         {amb && (
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '3px 8px', borderRadius: 6, background: 'var(--surface)',
-            fontSize: 10, color: 'var(--text)', fontWeight: 500, flex: 1,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '5px 10px', borderRadius: 8, background: 'var(--surface)',
+            fontSize: 12, color: 'var(--text)', fontWeight: 500, flex: 1, minWidth: 0,
           }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--text-3)" strokeWidth="2" fill="none"/>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+              <rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--text-3)" strokeWidth="1.8" fill="none"/>
+              <path d="M3 12h18M8 5v14M16 5v14" stroke="var(--text-3)" strokeWidth="1.2"/>
             </svg>
-            {amb.bloco ? `${amb.bloco} · ` : ''}{amb.nome}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {amb.bloco ? `${amb.bloco} · ` : ''}{amb.nome}
+            </span>
             {!!amb.exige_chave && (
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" style={{ marginLeft: 3, flexShrink: 0 }}>
-                <circle cx="8" cy="15" r="4" stroke="var(--text-3)" strokeWidth="2"/>
-                <path d="M12 11l6-6M16 6l2 2" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <circle cx="8" cy="15" r="4" stroke="#E0A800" strokeWidth="1.8"/>
+                <path d="M12 11l6-6M16 6l2 2" stroke="#E0A800" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
             )}
           </div>
@@ -337,13 +367,12 @@ function UpcomingCard({ ag }: { ag: any }) {
   );
 }
 
-// ── UpcomingPanel (painel direito completo) ───────────────────
+// ── UpcomingPanel (painel direito) ─────────────────────────────
 function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
   const [allAg, setAllAg] = useState<any[]>([]);
   const [ambientes, setAmbientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // filters
   const [filterTipo, setFilterTipo] = useState<string>('TODOS');
   const [filterBloco, setFilterBloco] = useState<string>('TODOS');
   const [filterExigeChave, setFilterExigeChave] = useState<boolean | null>(null);
@@ -376,19 +405,12 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
 
   const filtered = useMemo(() => {
     return allAg
-      .filter((ag) => {
-        const agDate = (ag.data || '').split('T')[0];
-        return agDate >= today;
-      })
+      .filter((ag) => (ag.data || '').split('T')[0] > today)
       .filter((ag) => filterStatus.includes(ag.status))
       .filter((ag) => filterTipo === 'TODOS' || ag.ambiente?.tipo === filterTipo)
       .filter((ag) => filterBloco === 'TODOS' || ag.ambiente?.bloco === filterBloco)
       .filter((ag) => filterExigeChave === null || !!ag.ambiente?.exige_chave === filterExigeChave)
-      .filter((ag) => {
-        if (!filterDataAte) return true;
-        const agDate = (ag.data || '').split('T')[0];
-        return agDate <= filterDataAte;
-      })
+      .filter((ag) => !filterDataAte || (ag.data || '').split('T')[0] <= filterDataAte)
       .sort((a, b) => {
         const da = (a.data || '').split('T')[0];
         const db = (b.data || '').split('T')[0];
@@ -396,7 +418,6 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
       });
   }, [allAg, today, filterStatus, filterTipo, filterBloco, filterExigeChave, filterDataAte]);
 
-  // group by date
   const grouped = useMemo(() => {
     const map: Record<string, any[]> = {};
     filtered.forEach((ag) => {
@@ -407,61 +428,70 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
     return map;
   }, [filtered]);
 
-  const toggleStatus = (s: string) => {
-    setFilterStatus((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
-  };
+  const toggleStatus = (s: string) =>
+    setFilterStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 16, border: '1px solid var(--border)',
       display: 'flex', flexDirection: 'column',
-      position: 'sticky', top: 0, maxHeight: 'calc(100vh - 56px)',
+      position: 'sticky', top: 0,
+      maxHeight: 'calc(100vh - 56px)',
       overflow: 'hidden',
     }}>
-      {/* Panel header */}
-      <div style={{ padding: '16px 18px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* ── Cabeçalho do painel ── */}
+      <div style={{ paddingBottom: 16 }}>
+        <SectionBadge
+          label="Agenda de Salas"
+          sub={`${filtered.length} agendamento${filtered.length !== 1 ? 's' : ''} a partir de amanhã`}
+          icon={
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="2" stroke="#fff" strokeWidth="1.8" fill="none"/>
+              <path d="M3 12h18M8 5v14M16 5v14" stroke="#fff" strokeWidth="1.4"/>
+            </svg>
+          }
+        />
+
+        {/* ── Filtros ── */}
+        <div style={{
+          background: '#fff', border: '1px solid var(--border)', borderRadius: 14,
+          padding: '16px', display: 'flex', flexDirection: 'column', gap: 14,
+        }}>
+          {/* Cabeçalho do bloco de filtros */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--primary)" strokeWidth="2" fill="none"/>
-                <path d="M3 12h18M8 5v14M16 5v14" stroke="var(--primary)" strokeWidth="1.5"/>
+                <path d="M4 6h16M7 12h10M10 18h4" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round"/>
               </svg>
-              <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>
-                Visão de Salas
+              <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 13, color: 'var(--text)' }}>
+                Filtros
               </span>
             </div>
-            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
-              Agendamentos futuros · {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
-            </p>
+            <button
+              onClick={load}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 10px', borderRadius: 8, cursor: 'pointer',
+                border: '1px solid var(--border)', background: 'var(--surface)',
+                fontSize: 11, fontWeight: 500, color: 'var(--text-2)', fontFamily: 'var(--f-body)',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M1 4v6h6M23 20v-6h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Atualizar
+            </button>
           </div>
-          <button
-            onClick={load}
-            title="Atualizar"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 8px', cursor: 'pointer' }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-              <path d="M1 4v6h6M23 20v-6h-6" stroke="var(--text-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="var(--text-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
 
-        {/* ── Filters ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
-
-          {/* Status chips */}
+          {/* Status */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>
               Status
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
               {STATUS_ALL.map((s) => (
                 <Chip
-                  key={s}
-                  label={STATUS_LABEL[s]}
+                  key={s} label={STATUS_LABEL[s]}
                   active={filterStatus.includes(s)}
                   dot={STATUS_COLORS[s]?.dot}
                   onClick={() => toggleStatus(s)}
@@ -470,12 +500,12 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
             </div>
           </div>
 
-          {/* Tipo chips */}
+          {/* Tipo de ambiente */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>
               Tipo de ambiente
             </div>
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 5 }}>
               {[
                 { value: 'TODOS', label: 'Todos' },
                 { value: 'SALA_FECHADA', label: 'Sala fechada' },
@@ -487,16 +517,16 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
           </div>
 
           {/* Bloco + Exige chave */}
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>
                 Bloco
               </div>
               <select
                 value={filterBloco}
                 onChange={(e) => setFilterBloco(e.target.value)}
                 style={{
-                  width: '100%', padding: '5px 8px', borderRadius: 8,
+                  width: '100%', padding: '7px 10px', borderRadius: 9,
                   border: '1px solid var(--border)', background: 'var(--surface)',
                   fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--text)',
                   outline: 'none', cursor: 'pointer',
@@ -508,31 +538,34 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
             </div>
 
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>
                 Chave
               </div>
               <button
                 onClick={() => setFilterExigeChave((v) => v === true ? null : true)}
                 style={{
-                  padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
-                  border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '7px 12px', borderRadius: 9, fontSize: 12, fontWeight: 600,
+                  border: 'none', cursor: 'pointer',
                   background: filterExigeChave === true ? 'var(--primary)' : 'var(--surface)',
                   color: filterExigeChave === true ? '#fff' : 'var(--text-2)',
                   outline: filterExigeChave === true ? 'none' : '1px solid var(--border)',
+                  fontFamily: 'var(--f-body)',
+                  boxShadow: filterExigeChave === true ? '0 2px 8px rgba(93,70,184,0.22)' : 'none',
                 }}
               >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                  <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M12 11l6-6M16 6l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="1.8"/>
+                  <path d="M12 11l6-6M16 6l2 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
                 Exige chave
               </button>
             </div>
           </div>
 
-          {/* Date filter */}
+          {/* Até a data */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>
               Até a data
             </div>
             <DatePicker
@@ -545,47 +578,55 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
         </div>
       </div>
 
-      {/* ── Results list ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 18px 18px' }}>
+      {/* ── Lista de resultados ── */}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 8 }}>
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[1,2,3].map((i) => <Skeleton key={i} height={72}/>)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} height={80}/>)}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{
-            padding: '32px 16px', textAlign: 'center',
-            border: '1.5px dashed var(--border)', borderRadius: 12,
+            padding: '40px 20px', textAlign: 'center',
+            border: '1.5px dashed var(--border)', borderRadius: 14, background: '#fff',
           }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🗓️</div>
-            <p style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 500 }}>Nenhum agendamento</p>
-            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 12px', display: 'block' }}>
+              <rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--text-3)" strokeWidth="1.5" fill="none"/>
+              <path d="M3 12h18M8 5v14M16 5v14" stroke="var(--text-3)" strokeWidth="1.2"/>
+            </svg>
+            <p style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 600, marginBottom: 4 }}>
+              Nenhum agendamento
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)' }}>
               Ajuste os filtros para ver outros resultados.
             </p>
           </div>
         ) : (
           Object.entries(grouped).map(([date, items]) => (
-            <div key={date} style={{ marginBottom: 16 }}>
-              {/* Date divider */}
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
-              }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, color: 'var(--primary)',
-                  fontFamily: 'var(--f-head)', whiteSpace: 'nowrap',
-                  textTransform: 'capitalize',
+            <div key={date} style={{ marginBottom: 18 }}>
+              {/* Divisor de data */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <div style={{
+                  padding: '3px 10px', borderRadius: 999,
+                  background: date === today ? 'var(--primary)' : 'var(--surface)',
+                  border: date === today ? 'none' : '1px solid var(--border)',
                 }}>
-                  {date === today ? '🔵 Hoje' : fmtDate(date)}
-                </span>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700,
+                    color: date === today ? '#fff' : 'var(--text-2)',
+                    fontFamily: 'var(--f-head)', textTransform: 'capitalize', whiteSpace: 'nowrap',
+                  }}>
+                    {date === today ? 'Hoje' : fmtDate(date)}
+                  </span>
+                </div>
                 <div style={{ flex: 1, height: 1, background: 'var(--border)' }}/>
                 <span style={{
-                  fontSize: 10, color: 'var(--text-3)', fontWeight: 600,
-                  background: 'var(--surface)', padding: '1px 7px', borderRadius: 999,
+                  fontSize: 11, color: 'var(--text-3)', fontWeight: 700,
+                  background: 'var(--surface)', padding: '2px 8px', borderRadius: 999,
                   border: '1px solid var(--border)',
                 }}>
                   {items.length}
                 </span>
               </div>
-
               {items.map((ag) => <UpcomingCard key={ag.id} ag={ag}/>)}
             </div>
           ))
@@ -595,7 +636,7 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────
 export const PainelPortaria: React.FC = () => {
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -671,29 +712,62 @@ export const PainelPortaria: React.FC = () => {
   const emAndamento = agendamentos.filter((a) => a.status === 'EM_ANDAMENTO');
 
   return (
-    <div className="animate-fadeIn" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 24, alignItems: 'start' }}>
+    <div className="animate-fadeIn" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, alignItems: 'start' }}>
 
-      {/* ── LEFT: Portaria (hoje) ── */}
-      <div>
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 28, color: 'var(--text)', margin: 0 }}>
+      {/* ── ESQUERDA: Portaria de hoje ── */}
+      <div style={{ paddingRight: 32, borderRight: '1.5px solid var(--border)' }}>
+
+        {/* Cabeçalho da seção */}
+        <SectionBadge
+          label="Painel de Portaria"
+          sub={new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+          icon={
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="#fff" strokeWidth="1.8" fill="none"/>
+              <path d="M9 22V12h6v10" stroke="#fff" strokeWidth="1.8"/>
+            </svg>
+          }
+        />
+
+        {/* Saudação */}
+        <div style={{ marginBottom: 20 }}>
+          <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 26, color: 'var(--text)', margin: 0, letterSpacing: -0.5 }}>
             Olá, {user?.nome?.split(' ')[0]}!
           </h1>
-          <p className="mx-caption" style={{ marginTop: 4 }}>
-            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          <p className="mx-caption" style={{ marginTop: 4, fontSize: 13 }}>
+            Aqui estão os agendamentos de hoje que precisam da sua atenção.
           </p>
         </div>
 
-        {/* Stat row */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        {/* Linha de stats */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
           {[
-            { label: 'Total hoje', value: agendamentos.length, color: 'var(--primary)', bg: 'var(--primary-light)' },
-            { label: 'Pendentes', value: pendentes.length, color: '#7A5B00', bg: '#FFF7E0' },
-            { label: 'Em andamento', value: emAndamento.length, color: 'var(--secondary)', bg: 'var(--secondary-light)' },
+            { label: 'Total hoje', value: agendamentos.length, color: 'var(--primary)', bg: 'var(--primary-light)', icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <path d="M3 10h18M8 4v6M16 4v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            )},
+            { label: 'Pendentes', value: pendentes.length, color: '#7A5B00', bg: '#FFF7E0', icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            )},
+            { label: 'Em andamento', value: emAndamento.length, color: 'var(--secondary)', bg: 'var(--secondary-light)', icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )},
           ].map((s) => (
-            <div key={s.label} className="mx-card" style={{ padding: '14px 18px', flex: 1 }}>
-              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'var(--f-head)', color: s.color }}>{s.value}</div>
-              <div className="mx-caption" style={{ marginTop: 2, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.4, fontSize: 10 }}>{s.label}</div>
+            <div key={s.label} className="mx-card" style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 9, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color }}>
+                {s.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--f-head)', color: s.color, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10, color: 'var(--text-3)' }}>{s.label}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -701,12 +775,16 @@ export const PainelPortaria: React.FC = () => {
         {/* Kanban */}
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-            {[1,2,3].map((i) => <Skeleton key={i} height={280}/>)}
+            {[1, 2, 3].map((i) => <Skeleton key={i} height={280}/>)}
           </div>
         ) : agendamentos.length === 0 ? (
           <div className="mx-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🏢</div>
-            <p>Nenhuma mentoria agendada para hoje.</p>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 14px', display: 'block' }}>
+              <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="var(--text-3)" strokeWidth="1.5" fill="none"/>
+              <path d="M9 22V12h6v10" stroke="var(--text-3)" strokeWidth="1.5"/>
+            </svg>
+            <p style={{ fontWeight: 600, marginBottom: 4 }}>Nenhuma mentoria agendada para hoje</p>
+            <p style={{ fontSize: 12 }}>A portaria está livre por ora.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -718,14 +796,14 @@ export const PainelPortaria: React.FC = () => {
               {pendentes.length === 0 && <EmptyCol label="Nada aguardando 🎉"/>}
             </div>
             <div>
-              <ColumnHeader title="Agendado · aguardando check-in" count={agendados.length} tone="accent"/>
+              <ColumnHeader title="Aguardando check-in" count={agendados.length} tone="accent"/>
               {agendados.map((ag) => (
                 <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={flashing === ag.id} checkinLoading={!!checkinLoading[ag.id]}/>
               ))}
               {agendados.length === 0 && <EmptyCol label="Tudo em andamento"/>}
             </div>
             <div>
-              <ColumnHeader title="Em andamento · sala ocupada" count={emAndamento.length} tone="green"/>
+              <ColumnHeader title="Sala ocupada" count={emAndamento.length} tone="green"/>
               {emAndamento.map((ag) => (
                 <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={false} checkinLoading={!!checkinLoading[ag.id]}/>
               ))}
@@ -735,8 +813,10 @@ export const PainelPortaria: React.FC = () => {
         )}
       </div>
 
-      {/* ── RIGHT: Visão de Salas ── */}
-      <UpcomingPanel refreshSignal={rightRefresh}/>
+      {/* ── DIREITA: Agenda de Salas ── */}
+      <div style={{ paddingLeft: 32 }}>
+        <UpcomingPanel refreshSignal={rightRefresh}/>
+      </div>
 
       <InstrucoesModal
         open={!!instrucaoModal}

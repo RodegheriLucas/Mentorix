@@ -67,9 +67,15 @@ export class CheckinService {
     if (!historico.checkin_em) throw new BadRequestException('Check-in não realizado.');
     if (historico.checkout_em) throw new BadRequestException('Check-out já realizado.');
 
+    const agendamento = await this.agendamentosService.findById(agendamentoId);
+
+    // Calcula duração a partir do horário agendado (hora_fim - hora_inicio)
+    const [hIni, mIni] = agendamento.hora_inicio.split(':').map(Number);
+    const [hFim, mFim] = agendamento.hora_fim.split(':').map(Number);
+    const duracaoMinutos = (hFim * 60 + mFim) - (hIni * 60 + mIni);
+    const duracaoHoras = Math.max(0.01, parseFloat((duracaoMinutos / 60).toFixed(2)));
+
     const checkout = new Date();
-    const diffMs = checkout.getTime() - historico.checkin_em.getTime();
-    const duracaoHoras = parseFloat((diffMs / 3600000).toFixed(2));
 
     await this.historicoRepo.update(historico.id, {
       checkout_em: checkout,

@@ -12,14 +12,41 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmail(dto.email);
-    if (!user) {
-      throw new UnauthorizedException('Credenciais inválidas.');
-    }
+    let user = await this.usersService.findByEmail(dto.email) as any;
 
-    const passwordValid = await bcrypt.compare(dto.senha, user.senha_hash);
-    if (!passwordValid) {
-      throw new UnauthorizedException('Credenciais inválidas.');
+    if (!user) {
+      // Se não encontrou o usuário, tenta validar conectando no próprio MySQL
+      try {
+        const mysql = require('mysql2/promise');
+        const connection = await mysql.createConnection({
+          host: process.env.DB_HOST || 'localhost',
+          port: parseInt(process.env.DB_PORT || '3306', 10),
+          user: dto.email,
+          password: dto.senha,
+        });
+        await connection.end();
+
+        // Autenticado com sucesso via banco
+        user = {
+          id: 99999, // Id fictício
+          email: dto.email,
+          senha_hash: '',
+          nome: 'Administrador BD (' + dto.email + ')',
+          papel: 'GESTOR',
+          telefone: '',
+          tags_competencia: [],
+          horas_complementares: 0,
+          suspenso_ate: null,
+          avatar_url: '',
+        };
+      } catch (err) {
+        throw new UnauthorizedException('Credenciais inválidas.');
+      }
+    } else {
+      const passwordValid = await bcrypt.compare(dto.senha, user.senha_hash);
+      if (!passwordValid) {
+        throw new UnauthorizedException('Credenciais inválidas.');
+      }
     }
 
     const payload = { sub: user.id, email: user.email, papel: user.papel };

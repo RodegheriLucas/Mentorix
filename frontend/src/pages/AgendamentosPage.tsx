@@ -205,7 +205,6 @@ function AgItem({ ag, onCancel, isMentor }: { ag: any; onCancel: (id: number) =>
       border: isLive ? '1.5px solid var(--secondary)' : '1px solid transparent',
     }}>
       <div style={{ display: 'flex' }}>
-        <div style={{ width: 4, background: stripeColor(ag.status), opacity: isDone ? 0.5 : 1, flexShrink: 0 }}/>
         <div style={{ flex: 1, padding: 14 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
             <Avatar initials={initials(otherName)} size={40}/>
@@ -350,7 +349,7 @@ export const AgendamentosPage: React.FC = () => {
           <ViewToggle view={view} onChange={setView}/>
 
           {view === 'calendario' ? (
-            <CalendarView items={agendamentos.filter((a) => !['CONCLUIDO', 'CANCELADO'].includes(a.status))}/>
+            <CalendarView items={agendamentos}/>
           ) : (
             <>
               {agendamentos.length === 0 && (
