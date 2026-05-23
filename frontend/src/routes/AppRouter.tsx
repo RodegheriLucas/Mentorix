@@ -57,6 +57,7 @@ export const AppRouter: React.FC = () => (
         <Route path="/aluno"               element={<MW roles={['ALUNO']}><MeusCards /></MW>} />
         <Route path="/aluno/meus-cards"    element={<MW roles={['ALUNO']}><MeusCards /></MW>} />
         <Route path="/aluno/novo-card"     element={<MW roles={['ALUNO']}><NovoCard /></MW>} />
+        <Route path="/aluno/editar-card/:id" element={<MW roles={['ALUNO']}><NovoCard /></MW>} />
         <Route path="/aluno/agendamentos"  element={<MW roles={['ALUNO']}><AgendamentosPage /></MW>} />
         <Route path="/aluno/avaliar"       element={<MW roles={['ALUNO']}><AvaliarEncontro /></MW>} />
         <Route path="/aluno/conta"         element={<MW roles={['ALUNO']}><ContaPage /></MW>} />

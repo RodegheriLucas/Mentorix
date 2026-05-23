@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../config/api';
 
 interface DateSlot {
@@ -37,6 +37,8 @@ const inputStyle: React.CSSProperties = {
 
 export const NovoCard: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEdit = !!id;
   const today = new Date().toISOString().split('T')[0];
 
   const [titulo, setTitulo] = useState('');
@@ -50,7 +52,28 @@ export const NovoCard: React.FC = () => {
   const [novaHoraFim, setNovaHoraFim] = useState('');
   const [slotError, setSlotError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isEdit) {
+      api.get(`/cards/${id}`)
+        .then((r) => {
+          const card = r.data;
+          setTitulo(card.titulo);
+          setDescricao(card.descricao);
+          setCategoria(card.categoria);
+          setSelectedTopics(card.tags || []);
+          setSlots((card.disponibilidades || []).map((d: any) => ({
+            data: d.data,
+            hora_inicio: d.hora_inicio,
+            hora_fim: d.hora_fim,
+          })));
+        })
+        .catch(() => setError('Erro ao carregar os dados da solicitação.'))
+        .finally(() => setInitialLoading(false));
+    }
+  }, [id, isEdit]);
 
   const toggleTopic = (t: string) => {
     setSelectedTopics((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
@@ -94,22 +117,32 @@ export const NovoCard: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      await api.post('/cards', {
+      const data = {
         titulo,
         descricao,
         categoria,
         tags: selectedTopics,
         disponibilidades: categoria === 'GERAL' ? slots : [],
-      });
+      };
+
+      if (isEdit) {
+        await api.patch(`/cards/${id}`, data);
+      } else {
+        await api.post('/cards', data);
+      }
       navigate('/aluno/meus-cards');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao criar solicitação.');
+      setError(err.response?.data?.message || `Erro ao ${isEdit ? 'salvar' : 'criar'} solicitação.`);
     } finally {
       setLoading(false);
     }
   };
 
   const canPublish = titulo.trim() && descricao.trim() && selectedTopics.length > 0 && (categoria === 'TCC' || slots.length > 0);
+
+  if (initialLoading) {
+    return <div style={{ padding: 40, color: 'var(--text-3)' }}>Carregando dados...</div>;
+  }
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 720 }}>
@@ -119,8 +152,10 @@ export const NovoCard: React.FC = () => {
           fontSize: 10, fontWeight: 700, letterSpacing: 1,
           textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 4,
         }}>Aluno · UniMatch</p>
-        <h1 className="mx-h1" style={{ fontSize: 26 }}>Nova solicitação</h1>
-        <p className="mx-caption" style={{ marginTop: 4 }}>Descreva sua necessidade acadêmica para que mentores compatíveis possam aceitar.</p>
+        <h1 className="mx-h1" style={{ fontSize: 26 }}>{isEdit ? 'Editar solicitação' : 'Nova solicitação'}</h1>
+        <p className="mx-caption" style={{ marginTop: 4 }}>
+          {isEdit ? 'Atualize os detalhes da sua necessidade acadêmica.' : 'Descreva sua necessidade acadêmica para que mentores compatíveis possam aceitar.'}
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -333,7 +368,7 @@ export const NovoCard: React.FC = () => {
             className="mx-btn"
             style={{ padding: '14px 24px', fontSize: 15, fontWeight: 600, opacity: canPublish ? 1 : 0.5 }}
           >
-            {loading ? 'Publicando…' : 'Publicar solicitação →'}
+            {loading ? (isEdit ? 'Salvando…' : 'Publicando…') : (isEdit ? 'Salvar alterações →' : 'Publicar solicitação →')}
           </button>
           <button type="button" className="mx-btn ghost" onClick={() => navigate(-1)} style={{ padding: '14px 20px' }}>
             Cancelar
