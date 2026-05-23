@@ -12,7 +12,8 @@ const AVATAR_GRADIENTS = [
   'linear-gradient(135deg,#7a5fd0,#4a35a0)',
 ];
 
-function nameGradient(nome: string) {
+function nameGradient(nome?: string) {
+  if (!nome) return AVATAR_GRADIENTS[0];
   let h = 0;
   for (let i = 0; i < nome.length; i++) h = (h * 31 + nome.charCodeAt(i)) % AVATAR_GRADIENTS.length;
   return AVATAR_GRADIENTS[Math.abs(h)];
