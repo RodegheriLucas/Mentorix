@@ -1,17 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Contestacao } from './entities/contestacao.entity';
 import { HistoricoEncontro } from '../checkin/entities/historico-encontro.entity';
+import { Agendamento } from '../agendamentos/entities/agendamento.entity';
 import { User } from '../users/entities/user.entity';
 import { ContestacaoStatus } from '../../common/types/status.enum';
 import { AuditService } from '../audit/audit.service';
-
-export class CreateDisputaDto {
-  historico_id: number;
-  justificativa: string;
-  foto_url?: string;
-}
+import { CreateDisputaDto } from './dto/create-disputa.dto';
 
 @Injectable()
 export class DisputesService {
@@ -20,6 +16,8 @@ export class DisputesService {
     private readonly contestacaoRepo: Repository<Contestacao>,
     @InjectRepository(HistoricoEncontro)
     private readonly historicoRepo: Repository<HistoricoEncontro>,
+    @InjectRepository(Agendamento)
+    private readonly agendamentoRepo: Repository<Agendamento>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly auditService: AuditService,
@@ -27,15 +25,31 @@ export class DisputesService {
   ) {}
 
   async create(mentorId: number, dto: CreateDisputaDto, ip?: string): Promise<Contestacao> {
-    const historico = await this.historicoRepo.findOne({ where: { id: dto.historico_id } });
-    if (!historico) throw new NotFoundException('Histórico não encontrado.');
+    const agendamento = await this.agendamentoRepo.findOne({ where: { id: dto.agendamento_id } });
+    if (!agendamento) throw new NotFoundException('Agendamento não encontrado.');
 
-    const existing = await this.contestacaoRepo.findOne({ where: { historico_id: dto.historico_id } });
-    if (existing) throw new BadRequestException('Contestação já aberta para este encontro.');
+    if (agendamento.mentor_id !== mentorId) {
+      throw new ForbiddenException('Você não pode contestar este agendamento.');
+    }
+
+    const historico = await this.historicoRepo.findOne({
+      where: { agendamento_id: dto.agendamento_id },
+      order: { criado_em: 'DESC' },
+    });
+
+    if (!historico) throw new NotFoundException('Histórico de encontro não encontrado. O gestor deve ter realizado o check-in e check-out.');
+    if (!historico.checkout_em) throw new BadRequestException('O encontro ainda não foi encerrado pelo gestor (falta check-out).');
+
+    const existing = await this.contestacaoRepo.findOne({ where: { historico_id: historico.id } });
+    if (existing) throw new BadRequestException('Já existe uma contestação aberta para este encontro.');
+
+    if (historico.horas_consolidadas) {
+      throw new BadRequestException('As horas deste encontro já foram consolidadas via avaliação do aluno.');
+    }
 
     const contestacao = await this.contestacaoRepo.save(
       this.contestacaoRepo.create({
-        historico_id: dto.historico_id,
+        historico_id: historico.id,
         mentor_id: mentorId,
         justificativa: dto.justificativa,
         foto_url: dto.foto_url,
@@ -43,7 +57,7 @@ export class DisputesService {
       }),
     );
 
-    await this.auditService.log(mentorId, 'DISPUTA_ABERTA', 'contestacoes', contestacao.id, null, { historico_id: dto.historico_id }, ip);
+    await this.auditService.log(mentorId, 'DISPUTA_ABERTA', 'contestacoes', contestacao.id, null, { agendamento_id: dto.agendamento_id, historico_id: historico.id }, ip);
 
     return contestacao;
   }
@@ -51,7 +65,7 @@ export class DisputesService {
   async findAll(): Promise<Contestacao[]> {
     return this.contestacaoRepo.find({
       where: { status: ContestacaoStatus.ABERTA },
-      relations: ['mentor', 'historico'],
+      relations: ['mentor', 'historico', 'historico.agendamento', 'historico.agendamento.card', 'historico.agendamento.card.aluno'],
       order: { criado_em: 'ASC' },
     });
   }

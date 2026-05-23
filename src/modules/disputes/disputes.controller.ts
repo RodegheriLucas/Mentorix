@@ -2,7 +2,8 @@ import { Controller, Post, Get, Patch, Body, Param, ParseIntPipe, UseGuards, Req
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { DisputesService, CreateDisputaDto } from './disputes.service';
+import { DisputesService } from './disputes.service';
+import { CreateDisputaDto } from './dto/create-disputa.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';

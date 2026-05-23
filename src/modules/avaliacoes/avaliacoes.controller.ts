@@ -1,5 +1,6 @@
 import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
-import { AvaliacoesService, CreateAvaliacaoDto } from './avaliacoes.service';
+import { AvaliacoesService } from './avaliacoes.service';
+import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
