@@ -11,3 +11,6 @@ uploads/
 *.log
 frontend/node_modules/
 frontend/dist/
+backend.log
+backend-err.log
+CLAUDE.md
