@@ -46,13 +46,12 @@ export const MobileShell: React.FC<MobileShellProps> = ({ children }) => {
       flexDirection: 'column',
       height: '100dvh',
       background: '#F2EFE9',
-      overflow: 'hidden',
     }}>
       <div style={{
         flex: 1,
         overflowY: 'auto',
         overflowX: 'hidden',
-        padding: '16px',
+        padding: '16px 16px 44px',
         boxSizing: 'border-box',
       }}>
         {children}

@@ -131,7 +131,7 @@ function SlotModal({ card, slots, loading, selectedSlot, onSelectSlot, onConfirm
                     }}/>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-                        {slot.dia_semana} · {slot.hora_inicio} – {slot.hora_fim}
+                        {slot.data ? new Date(slot.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {slot.hora_inicio} – {slot.hora_fim}
                       </div>
                       <div className="mx-caption" style={{ fontSize: 11 }}>
                         {slot.ambiente?.nome}{slot.ambiente?.bloco ? ` · ${slot.ambiente.bloco}` : ''}

@@ -95,46 +95,6 @@ export const LoginPage: React.FC = () => {
       boxSizing: 'border-box',
     }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        {/* Logo — only on mobile (desktop has brand side) */}
-        {!isDesktop && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 12,
-              background: gradientBg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(93,70,184,0.35)',
-            }}>
-              <MxLogo size={20} color="#fff"/>
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 16, color: 'var(--text)', letterSpacing: -0.3 }}>
-                mentorix
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)' }}>Acesso da plataforma</div>
-            </div>
-          </div>
-        )}
-
-        {/* Logo — desktop version */}
-        {isDesktop && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 36 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 12,
-              background: 'linear-gradient(135deg, #5D46B8, #3A2885)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(93,70,184,0.35)',
-            }}>
-              <MxLogo size={20} color="#fff"/>
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 16, color: 'var(--text)', letterSpacing: -0.3 }}>
-                mentorix
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-3)' }}>Acesso da plataforma</div>
-            </div>
-          </div>
-        )}
-
         <h2 style={{
           fontFamily: 'var(--f-head)', fontWeight: 700,
           fontSize: isDesktop ? 28 : 24,
@@ -219,26 +179,6 @@ export const LoginPage: React.FC = () => {
             ) : 'Entrar →'}
           </button>
         </form>
-
-        <div style={{ marginTop: 28, paddingTop: 22, borderTop: '1px solid var(--border)' }}>
-          <p style={{
-            fontSize: 12, color: 'var(--text-3)', lineHeight: 1.55, textAlign: 'center',
-            fontFamily: 'var(--f-body)',
-          }}>
-            Acesso restrito a usuários cadastrados pela instituição.
-            <br/>Dúvidas? Fale com a coordenação.
-          </p>
-        </div>
-
-        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center', gap: 6, flexWrap: 'wrap' }}>
-          {['Aluno', 'Mentor', 'Professor', 'Gestor'].map((r) => (
-            <span key={r} style={{
-              padding: '4px 10px', borderRadius: 999,
-              background: '#fff', border: '1px solid var(--border)',
-              fontSize: 11, color: 'var(--text-2)', fontFamily: 'var(--f-body)',
-            }}>{r}</span>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -282,10 +222,7 @@ export const LoginPage: React.FC = () => {
 
           {/* Headline */}
           <div style={{ position: 'relative' }}>
-            <div style={{
-              fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.5)', marginBottom: 10, fontFamily: 'var(--f-body)',
-            }}>Plataforma de Mentoria Acadêmica</div>
+
 
             <h1 style={{
               fontFamily: 'var(--f-head)', fontWeight: 800,

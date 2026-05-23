@@ -164,7 +164,7 @@ export const NovoCard: React.FC = () => {
                     transition: 'all 0.15s',
                   }}
                 >
-                  {cat === 'GERAL' ? '📘 Geral' : '🎓 TCC'}
+                  {cat === 'GERAL' ? 'Geral' : 'TCC'}
                 </button>
               ))}
             </div>

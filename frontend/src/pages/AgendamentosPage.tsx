@@ -51,9 +51,19 @@ function statusCalColor(status: string) {
   return 'linear-gradient(135deg,#5D46B8,#3A2885)';
 }
 
-function dayIndex(diaSemana: string) {
-  const map: Record<string, number> = { SEG: 0, TER: 1, QUA: 2, QUI: 3, SEX: 4 };
-  return map[diaSemana?.toUpperCase()] ?? -1;
+function dayIndex(data: string) {
+  if (!data) return -1;
+  const [year, month, day] = data.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  const map: Record<number, number> = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4 };
+  return map[d.getDay()] ?? -1;
+}
+
+function formatData(data: string): string {
+  if (!data) return '';
+  const [year, month, day] = data.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '');
 }
 
 function CalendarView({ items }: { items: any[] }) {
@@ -99,7 +109,7 @@ function CalendarView({ items }: { items: any[] }) {
         {/* Event blocks */}
         <div style={{ position: 'absolute', top: 0, left: 46, right: 0, bottom: 0, pointerEvents: 'none' }}>
           {items.map((ag) => {
-            const col = dayIndex(ag.dia_semana);
+            const col = dayIndex(ag.data);
             if (col < 0) return null;
             const startH = parseInt(ag.hora_inicio?.split(':')[0] ?? '8', 10);
             const endH   = parseInt(ag.hora_fim?.split(':')[0] ?? '9', 10);
@@ -180,7 +190,7 @@ function AgItem({ ag, onCancel, isMentor }: { ag: any; onCancel: (id: number) =>
   const checkinData = {
     status: ag.status,
     sala: ag.ambiente?.nome,
-    when: `${ag.dia_semana} · ${ag.hora_inicio?.slice(0,5)}–${ag.hora_fim?.slice(0,5)}`,
+    when: `${formatData(ag.data)} · ${ag.hora_inicio?.slice(0,5)}–${ag.hora_fim?.slice(0,5)}`,
     duracao: ag.duracao_horas ? `${ag.duracao_horas}h` : undefined,
     checkinAt: ag.checkin_em ? ag.hora_inicio?.slice(0,5) : undefined,
     checkoutAt: ag.checkout_em ? ag.hora_fim?.slice(0,5) : undefined,
@@ -331,7 +341,7 @@ export const AgendamentosPage: React.FC = () => {
                   Próxima mentoria
                 </div>
                 <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
-                  {nextSession.card?.titulo || 'Mentoria'} · {nextSession.dia_semana} {nextSession.hora_inicio?.slice(0,5)}
+                  {nextSession.card?.titulo || 'Mentoria'} · {formatData(nextSession.data)} {nextSession.hora_inicio?.slice(0,5)}
                 </div>
               </div>
             </div>
