@@ -1,17 +1,11 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Avaliacao } from './entities/avaliacao.entity';
 import { HistoricoEncontro } from '../checkin/entities/historico-encontro.entity';
 import { User } from '../users/entities/user.entity';
-import { CheckinService } from '../checkin/checkin.service';
 import { AuditService } from '../audit/audit.service';
-
-export class CreateAvaliacaoDto {
-  historico_id: number;
-  nota: number;
-  depoimento?: string;
-}
+import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 
 @Injectable()
 export class AvaliacoesService {
@@ -22,26 +16,28 @@ export class AvaliacoesService {
     private readonly historicoRepo: Repository<HistoricoEncontro>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    private readonly checkinService: CheckinService,
     private readonly auditService: AuditService,
     private readonly dataSource: DataSource,
   ) {}
 
   async create(alunoId: number, dto: CreateAvaliacaoDto, ip?: string): Promise<Avaliacao> {
-    if (dto.nota < 1 || dto.nota > 5) throw new BadRequestException('Nota deve ser entre 1 e 5.');
-
     const historico = await this.historicoRepo.findOne({
       where: { id: dto.historico_id },
-      relations: ['agendamento', 'agendamento.mentor'],
+      relations: ['agendamento', 'agendamento.card', 'agendamento.card.aluno', 'agendamento.mentor'],
     });
 
     if (!historico) throw new NotFoundException('Histórico não encontrado.');
+
+    if (historico.agendamento?.card?.aluno?.id !== alunoId) {
+      throw new ForbiddenException('Você não pode avaliar este encontro.');
+    }
+
     if (!historico.checkin_em || !historico.checkout_em) {
       throw new BadRequestException('Encontro sem check-in/check-out completo.');
     }
-    if (historico.horas_consolidadas) {
-      throw new BadRequestException('Avaliação já realizada para este encontro.');
-    }
+
+    const jaAvaliado = await this.avaliacaoRepo.findOne({ where: { historico_id: dto.historico_id } });
+    if (jaAvaliado) throw new BadRequestException('Este encontro já foi avaliado.');
 
     return this.dataSource.transaction(async (manager) => {
       const avaliacao = await manager.save(Avaliacao, {
@@ -74,7 +70,34 @@ export class AvaliacoesService {
     });
   }
 
-  async findPendentes(alunoId: number): Promise<HistoricoEncontro[]> {
-    return this.checkinService.findPendentesAvaliacao(alunoId);
+  async findPendentes(alunoId: number): Promise<any[]> {
+    const rows = await this.historicoRepo.query(`
+      SELECT
+        h.id,
+        h.data_encontro,
+        h.checkin_em,
+        h.checkout_em,
+        h.duracao_horas,
+        a.dia_semana,
+        a.hora_inicio,
+        a.hora_fim,
+        c.titulo AS card_titulo,
+        c.tags  AS card_tags,
+        u.nome  AS mentor_nome,
+        u.avatar_url AS mentor_avatar
+      FROM historico_encontros h
+      JOIN agendamentos a ON h.agendamento_id = a.id
+      JOIN cards_ajuda c  ON a.card_id = c.id
+      JOIN usuarios u     ON a.mentor_id = u.id
+      WHERE c.aluno_id = ?
+        AND h.checkout_em IS NOT NULL
+        AND h.id NOT IN (SELECT historico_id FROM avaliacoes)
+      ORDER BY h.data_encontro DESC
+    `, [alunoId]);
+
+    return rows.map((r: any) => ({
+      ...r,
+      card_tags: typeof r.card_tags === 'string' ? JSON.parse(r.card_tags) : r.card_tags,
+    }));
   }
 }

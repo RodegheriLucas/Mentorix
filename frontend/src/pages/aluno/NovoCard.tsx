@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
-import { AvailabilityGrid, Slot } from '../../components/availability/AvailabilityGrid';
+
+interface DateSlot {
+  data: string;
+  hora_inicio: string;
+  hora_fim: string;
+}
 
 const TOPICS = [
   'SQL', 'Postgres', 'Indexação',
@@ -32,12 +37,18 @@ const inputStyle: React.CSSProperties = {
 
 export const NovoCard: React.FC = () => {
   const navigate = useNavigate();
+  const today = new Date().toISOString().split('T')[0];
+
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [categoria, setCategoria] = useState<'GERAL' | 'TCC'>('GERAL');
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [topicOpen, setTopicOpen] = useState(false);
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots] = useState<DateSlot[]>([]);
+  const [novaData, setNovaData] = useState('');
+  const [novaHoraInicio, setNovaHoraInicio] = useState('');
+  const [novaHoraFim, setNovaHoraFim] = useState('');
+  const [slotError, setSlotError] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,15 +56,46 @@ export const NovoCard: React.FC = () => {
     setSelectedTopics((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
   };
 
+  const addSlot = () => {
+    setSlotError('');
+    if (!novaData || !novaHoraInicio || !novaHoraFim) {
+      setSlotError('Preencha data, hora de início e hora de fim.');
+      return;
+    }
+    if (novaHoraFim <= novaHoraInicio) {
+      setSlotError('A hora de fim deve ser maior que a hora de início.');
+      return;
+    }
+    const duplicate = slots.some(
+      (s) => s.data === novaData && s.hora_inicio === novaHoraInicio && s.hora_fim === novaHoraFim,
+    );
+    if (duplicate) {
+      setSlotError('Este horário já foi adicionado.');
+      return;
+    }
+    setSlots((prev) => [...prev, { data: novaData, hora_inicio: novaHoraInicio, hora_fim: novaHoraFim }]);
+    setNovaHoraInicio('');
+    setNovaHoraFim('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (slots.length === 0) { setError('Adicione pelo menos um horário de disponibilidade.'); return; }
+    if (categoria === 'GERAL' && slots.length === 0) {
+      setError('Adicione pelo menos um horário de disponibilidade.');
+      return;
+    }
     if (selectedTopics.length === 0) { setError('Selecione pelo menos um assunto.'); return; }
     setError('');
     setLoading(true);
     try {
-      await api.post('/cards', { titulo, descricao, categoria, tags: selectedTopics, disponibilidades: slots });
-      navigate('/aluno');
+      await api.post('/cards', {
+        titulo,
+        descricao,
+        categoria,
+        tags: selectedTopics,
+        disponibilidades: categoria === 'GERAL' ? slots : [],
+      });
+      navigate('/aluno/meus-cards');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao criar solicitação.');
     } finally {
@@ -61,7 +103,7 @@ export const NovoCard: React.FC = () => {
     }
   };
 
-  const canPublish = titulo.trim() && descricao.trim() && selectedTopics.length > 0 && slots.length > 0;
+  const canPublish = titulo.trim() && descricao.trim() && selectedTopics.length > 0 && (categoria === 'TCC' || slots.length > 0);
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 720 }}>
@@ -190,11 +232,87 @@ export const NovoCard: React.FC = () => {
           </Field>
         </div>
 
-        <div className="mx-card" style={{ padding: 20 }}>
-          <h2 className="mx-h3" style={{ marginBottom: 6 }}>Disponibilidade horária</h2>
-          <p className="mx-caption" style={{ marginBottom: 14 }}>Clique nas células para liberar horários de seg–sab, 8h–18h.</p>
-          <AvailabilityGrid value={slots} onChange={setSlots}/>
-        </div>
+        {categoria === 'GERAL' && (
+          <div className="mx-card" style={{ padding: 20 }}>
+            <h2 className="mx-h3" style={{ marginBottom: 4 }}>Disponibilidade horária</h2>
+            <p className="mx-caption" style={{ marginBottom: 16 }}>Informe as datas e horários em que você está disponível para a sessão.</p>
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div style={{ flex: '1 1 150px' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Data</label>
+                <input
+                  type="date"
+                  min={today}
+                  value={novaData}
+                  onChange={(e) => setNovaData(e.target.value)}
+                  style={{ ...inputStyle, padding: '10px 12px' }}
+                />
+              </div>
+              <div style={{ flex: '1 1 110px' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Início</label>
+                <input
+                  type="time"
+                  value={novaHoraInicio}
+                  onChange={(e) => setNovaHoraInicio(e.target.value)}
+                  style={{ ...inputStyle, padding: '10px 12px' }}
+                />
+              </div>
+              <div style={{ flex: '1 1 110px' }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Fim</label>
+                <input
+                  type="time"
+                  value={novaHoraFim}
+                  onChange={(e) => setNovaHoraFim(e.target.value)}
+                  style={{ ...inputStyle, padding: '10px 12px' }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={addSlot}
+                style={{
+                  flex: '0 0 auto', padding: '10px 18px', borderRadius: 12,
+                  background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                  color: '#fff', border: 0, cursor: 'pointer',
+                  fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13,
+                }}
+              >
+                + Adicionar
+              </button>
+            </div>
+
+            {slotError && (
+              <p style={{ fontSize: 12, color: 'var(--accent-dark)', marginTop: 8 }}>{slotError}</p>
+            )}
+
+            {slots.length > 0 && (
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 8 }}>Horários adicionados:</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {slots.map((s, i) => {
+                    const [year, month, day] = s.data.split('-');
+                    const date = new Date(Number(year), Number(month) - 1, Number(day));
+                    const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+                    const label = `${weekday}, ${day}/${month} ${s.hora_inicio}–${s.hora_fim}`;
+                    return (
+                      <div key={i} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        background: 'var(--primary-light)', borderRadius: 999,
+                        padding: '5px 10px', fontSize: 12,
+                      }}>
+                        <span style={{ color: 'var(--primary-dark)', fontWeight: 500 }}>{label}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSlots(slots.filter((_, idx) => idx !== i))}
+                          style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}
+                        >×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {error && (
           <div style={{ background: 'var(--accent-light)', border: '1px solid var(--accent)', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: 'var(--accent-dark)' }}>

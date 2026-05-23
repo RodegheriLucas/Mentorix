@@ -11,7 +11,7 @@ import { CardStatus, AgendamentoStatus } from '../../common/types/status.enum';
 import { AuditService } from '../audit/audit.service';
 
 export interface SlotResult {
-  dia_semana: string;
+  data: string;
   hora_inicio: string;
   hora_fim: string;
   ambiente: any;
@@ -41,7 +41,7 @@ export class MatchmakingService {
 
     for (const slot of card.disponibilidades) {
       const { salasFechadas, ambientesComuns } = await this.ambientesService.findFreeForSlot(
-        slot.dia_semana,
+        slot.data,
         slot.hora_inicio,
         slot.hora_fim,
       );
@@ -49,7 +49,7 @@ export class MatchmakingService {
       if (salasFechadas.length > 0) {
         salasFechadas.forEach((sala) =>
           results.push({
-            dia_semana: slot.dia_semana,
+            data: slot.data,
             hora_inicio: slot.hora_inicio,
             hora_fim: slot.hora_fim,
             ambiente: sala,
@@ -59,7 +59,7 @@ export class MatchmakingService {
       } else {
         ambientesComuns.forEach((espaco) =>
           results.push({
-            dia_semana: slot.dia_semana,
+            data: slot.data,
             hora_inicio: slot.hora_inicio,
             hora_fim: slot.hora_fim,
             ambiente: espaco,
@@ -90,7 +90,7 @@ export class MatchmakingService {
         card_id: cardId,
         mentor_id: mentorId,
         ambiente_id: dto.ambienteId,
-        dia_semana: dto.diaSemana,
+        data: dto.data,
         hora_inicio: dto.horaInicio,
         hora_fim: dto.horaFim,
         status: AgendamentoStatus.PENDENTE_GESTOR,
@@ -100,7 +100,7 @@ export class MatchmakingService {
 
       await manager.save(AmbienteReserva, {
         ambiente_id: dto.ambienteId,
-        dia_semana: dto.diaSemana,
+        data: dto.data,
         hora_inicio: dto.horaInicio,
         hora_fim: dto.horaFim,
         agendamento_id: saved.id,

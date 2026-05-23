@@ -3,7 +3,6 @@ import {
   ManyToOne, JoinColumn,
 } from 'typeorm';
 import { Ambiente } from './ambiente.entity';
-import { DiaSemana } from '../../../common/types/status.enum';
 
 @Entity('ambiente_reservas')
 export class AmbienteReserva {
@@ -17,8 +16,8 @@ export class AmbienteReserva {
   @JoinColumn({ name: 'ambiente_id' })
   ambiente: Ambiente;
 
-  @Column({ name: 'dia_semana', type: 'enum', enum: DiaSemana })
-  dia_semana: DiaSemana;
+  @Column({ name: 'data', type: 'date' })
+  data: string;
 
   @Column({ name: 'hora_inicio', type: 'time' })
   hora_inicio: string;

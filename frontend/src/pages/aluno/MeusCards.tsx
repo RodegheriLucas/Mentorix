@@ -33,6 +33,27 @@ function stripeColor(status: string) {
   return 'var(--primary)';
 }
 
+interface DateSlot {
+  data: string;
+  hora_inicio: string;
+  hora_fim: string;
+}
+
+interface EditState {
+  id: number;
+  titulo: string;
+  descricao: string;
+  categoria: 'GERAL' | 'TCC';
+  selectedTopics: string[];
+  slots: DateSlot[];
+  novaData: string;
+  novaHoraInicio: string;
+  novaHoraFim: string;
+  slotError: string;
+  loading: boolean;
+  error: string;
+}
+
 const FILTER_TABS = [
   { id: 'todas',      label: 'Todas' },
   { id: 'mentoria',   label: 'Mentorias' },
@@ -94,7 +115,7 @@ function FilterTabs({ active, onChange, counts }: {
   );
 }
 
-function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => void }) {
+function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: number) => void; onEdit: (card: any) => void }) {
   const isLive = card.status === 'EM_ANDAMENTO';
   const isAg   = card.status === 'AGENDADO';
   const isDone = card.status === 'CONCLUIDO';
@@ -239,8 +260,27 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
             </div>
           )}
 
-          {/* Cancelar */}
-          {['ABERTO', 'ACEITO'].includes(card.status) && (
+          {/* Ações em cards abertos */}
+          {card.status === 'ABERTO' && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <button onClick={() => onEdit(card)} style={{
+                padding: '8px 14px', borderRadius: 10,
+                border: '1px solid var(--primary)', background: 'var(--primary-light)', cursor: 'pointer',
+                fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--primary-dark)', fontWeight: 500,
+              }}>
+                Editar
+              </button>
+              <button onClick={() => onCancel(card.id)} style={{
+                padding: '8px 14px', borderRadius: 10,
+                border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
+                fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--accent)',
+              }}>
+                Cancelar solicitação
+              </button>
+            </div>
+          )}
+
+          {['ACEITO'].includes(card.status) && (
             <button onClick={() => onCancel(card.id)} style={{
               marginTop: 10, padding: '8px 14px', borderRadius: 10,
               border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
@@ -260,6 +300,9 @@ export const MeusCards: React.FC = () => {
   const [cards, setCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todas');
+  const [edit, setEdit] = useState<EditState | null>(null);
+
+  const today = new Date().toISOString().split('T')[0];
 
   const load = () => api.get('/cards/meus').then((r) => setCards(r.data)).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
@@ -268,6 +311,70 @@ export const MeusCards: React.FC = () => {
     if (!confirm('Cancelar este card?')) return;
     await api.delete(`/cards/${id}`);
     load();
+  };
+
+  const openEdit = (card: any) => {
+    setEdit({
+      id: card.id,
+      titulo: card.titulo,
+      descricao: card.descricao,
+      categoria: card.categoria,
+      selectedTopics: card.tags ?? [],
+      slots: (card.disponibilidades ?? []).map((d: any) => ({
+        data: d.data ?? '',
+        hora_inicio: d.hora_inicio,
+        hora_fim: d.hora_fim,
+      })),
+      novaData: '',
+      novaHoraInicio: '',
+      novaHoraFim: '',
+      slotError: '',
+      loading: false,
+      error: '',
+    });
+  };
+
+  const addEditSlot = () => {
+    if (!edit) return;
+    if (!edit.novaData || !edit.novaHoraInicio || !edit.novaHoraFim) {
+      setEdit({ ...edit, slotError: 'Preencha data, hora de início e hora de fim.' });
+      return;
+    }
+    if (edit.novaHoraFim <= edit.novaHoraInicio) {
+      setEdit({ ...edit, slotError: 'A hora de fim deve ser maior que a hora de início.' });
+      return;
+    }
+    setEdit({
+      ...edit,
+      slots: [...edit.slots, { data: edit.novaData, hora_inicio: edit.novaHoraInicio, hora_fim: edit.novaHoraFim }],
+      novaData: edit.novaData,
+      novaHoraInicio: '',
+      novaHoraFim: '',
+      slotError: '',
+    });
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!edit) return;
+    if (edit.categoria === 'GERAL' && edit.slots.length === 0) {
+      setEdit({ ...edit, error: 'Adicione pelo menos um horário de disponibilidade.' });
+      return;
+    }
+    setEdit({ ...edit, loading: true, error: '' });
+    try {
+      await api.patch(`/cards/${edit.id}`, {
+        titulo: edit.titulo,
+        descricao: edit.descricao,
+        categoria: edit.categoria,
+        tags: edit.selectedTopics,
+        disponibilidades: edit.categoria === 'GERAL' ? edit.slots : [],
+      });
+      setEdit(null);
+      load();
+    } catch (err: any) {
+      setEdit((prev) => prev ? { ...prev, loading: false, error: err.response?.data?.message || 'Erro ao salvar.' } : null);
+    }
   };
 
   const filtered = React.useMemo(() => {
@@ -282,6 +389,13 @@ export const MeusCards: React.FC = () => {
     mentoria:    cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status)).length,
     matchmaking: cards.filter((c) => ['ABERTO', 'ACEITO'].includes(c.status)).length,
     historico:   cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status)).length,
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '10px 12px', borderRadius: 10,
+    border: '1px solid var(--border)', background: '#fff',
+    fontFamily: 'var(--f-body)', fontSize: 13, color: 'var(--text)',
+    outline: 'none', boxSizing: 'border-box',
   };
 
   return (
@@ -320,8 +434,164 @@ export const MeusCards: React.FC = () => {
       )}
 
       {!loading && filtered.map((card) => (
-        <CardAluno key={card.id} card={card} onCancel={cancelar}/>
+        <CardAluno key={card.id} card={card} onCancel={cancelar} onEdit={openEdit}/>
       ))}
+
+      {/* Modal de edição */}
+      {edit && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setEdit(null); }}
+        >
+          <div style={{
+            background: '#fff', borderRadius: '24px 24px 0 0',
+            width: '100%', maxWidth: 480,
+            maxHeight: '90vh', overflowY: 'auto',
+            padding: 20,
+          }}>
+            {/* Drag handle */}
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 16px' }}/>
+            <h2 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 18, marginBottom: 20, color: 'var(--text)' }}>
+              Editar solicitação
+            </h2>
+
+            <form onSubmit={saveEdit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Título</label>
+                <input
+                  style={inputStyle}
+                  value={edit.titulo}
+                  onChange={(e) => setEdit({ ...edit, titulo: e.target.value })}
+                  required maxLength={200}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Descrição</label>
+                <textarea
+                  style={{ ...inputStyle, minHeight: 90, resize: 'vertical', lineHeight: 1.45 }}
+                  value={edit.descricao}
+                  onChange={(e) => setEdit({ ...edit, descricao: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Categoria</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {(['GERAL', 'TCC'] as const).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setEdit({ ...edit, categoria: cat })}
+                      style={{
+                        flex: 1, padding: '10px', borderRadius: 10,
+                        border: edit.categoria === cat ? '2px solid var(--primary)' : '1px solid var(--border)',
+                        background: edit.categoria === cat ? 'var(--primary-light)' : '#fff',
+                        color: edit.categoria === cat ? 'var(--primary-dark)' : 'var(--text-2)',
+                        fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                      }}
+                    >
+                      {cat === 'GERAL' ? '📘 Geral' : '🎓 TCC'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {edit.categoria === 'GERAL' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 8 }}>Disponibilidade horária</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <input
+                      type="date" min={today}
+                      value={edit.novaData}
+                      onChange={(e) => setEdit({ ...edit, novaData: e.target.value })}
+                      style={{ ...inputStyle, flex: '1 1 130px' }}
+                    />
+                    <input
+                      type="time"
+                      value={edit.novaHoraInicio}
+                      onChange={(e) => setEdit({ ...edit, novaHoraInicio: e.target.value })}
+                      style={{ ...inputStyle, flex: '1 1 90px' }}
+                    />
+                    <input
+                      type="time"
+                      value={edit.novaHoraFim}
+                      onChange={(e) => setEdit({ ...edit, novaHoraFim: e.target.value })}
+                      style={{ ...inputStyle, flex: '1 1 90px' }}
+                    />
+                    <button
+                      type="button" onClick={addEditSlot}
+                      style={{
+                        padding: '10px 14px', borderRadius: 10, border: 0,
+                        background: 'var(--primary)', color: '#fff',
+                        fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                      }}
+                    >+ Add</button>
+                  </div>
+                  {edit.slotError && (
+                    <p style={{ fontSize: 11, color: 'var(--accent-dark)', marginTop: 6 }}>{edit.slotError}</p>
+                  )}
+                  {edit.slots.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                      {edit.slots.map((s, i) => (
+                        <div key={i} style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 5,
+                          background: 'var(--primary-light)', borderRadius: 999, padding: '4px 10px',
+                        }}>
+                          <span style={{ fontSize: 11, color: 'var(--primary-dark)', fontWeight: 500 }}>
+                            {s.data} {s.hora_inicio}–{s.hora_fim}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setEdit({ ...edit, slots: edit.slots.filter((_, idx) => idx !== i) })}
+                            style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 13, lineHeight: 1, padding: 0 }}
+                          >×</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {edit.error && (
+                <div style={{ background: 'var(--accent-light)', border: '1px solid var(--accent)', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: 'var(--accent-dark)' }}>
+                  {edit.error}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <button
+                  type="submit"
+                  disabled={edit.loading}
+                  style={{
+                    flex: 1, padding: '13px', borderRadius: 12, border: 0,
+                    background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                    color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                    opacity: edit.loading ? 0.7 : 1,
+                  }}
+                >
+                  {edit.loading ? 'Salvando…' : 'Salvar alterações'}
+                </button>
+                <button
+                  type="button" onClick={() => setEdit(null)}
+                  style={{
+                    padding: '13px 18px', borderRadius: 12,
+                    border: '1px solid var(--border)', background: '#fff',
+                    fontFamily: 'var(--f-body)', fontWeight: 500, fontSize: 14, cursor: 'pointer', color: 'var(--text-2)',
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

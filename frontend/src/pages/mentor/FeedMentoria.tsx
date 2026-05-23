@@ -317,7 +317,7 @@ export const FeedMentoria: React.FC = () => {
     try {
       await api.post(`/feed/${selectedCard.id}/aceitar`, {
         ambienteId: selectedSlot.ambiente.id,
-        diaSemana: selectedSlot.dia_semana,
+        data: selectedSlot.data,
         horaInicio: selectedSlot.hora_inicio,
         horaFim: selectedSlot.hora_fim,
       });

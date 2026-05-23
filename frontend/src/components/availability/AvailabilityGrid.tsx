@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const DIAS = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
 const HORAS = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
@@ -31,6 +31,12 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ value, onCha
   const [dragStart, setDragStart] = useState<{ dia: string; hora: string } | null>(null);
   const [dragMode, setDragMode] = useState<'add' | 'remove'>('add');
 
+  useEffect(() => {
+    const handleMouseUp = () => setDragging(false);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => document.removeEventListener('mouseup', handleMouseUp);
+  }, []);
+
   const toggleCell = (dia: string, hora: string) => {
     if (readonly) return;
     const selected = isSelected(value, dia, hora);
@@ -47,8 +53,11 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ value, onCha
     const byDia: Record<string, string[]> = {};
     for (const s of slots) {
       if (!byDia[s.dia_semana]) byDia[s.dia_semana] = [];
-      const idx = HORAS.indexOf(s.hora_inicio);
-      if (idx >= 0) byDia[s.dia_semana].push(s.hora_inicio);
+      let idx = HORAS.indexOf(s.hora_inicio);
+      while (idx >= 0 && idx < HORAS.length && HORAS[idx] < s.hora_fim) {
+        byDia[s.dia_semana].push(HORAS[idx]);
+        idx++;
+      }
     }
     const result: Slot[] = [];
     for (const [dia, horas] of Object.entries(byDia)) {
@@ -94,7 +103,6 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ value, onCha
                       <div
                         onMouseDown={() => { if (!readonly) { setDragging(true); setDragStart({ dia, hora }); setDragMode(sel ? 'remove' : 'add'); toggleCell(dia, hora); } }}
                         onMouseEnter={() => { if (dragging && !readonly) toggleCell(dia, hora); }}
-                        onMouseUp={() => setDragging(false)}
                         style={{
                           width: '100%',
                           height: 24,

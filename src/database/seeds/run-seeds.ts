@@ -35,13 +35,13 @@ async function runSeeds() {
   `);
   console.log('Ambientes criados.');
 
-  // Reserva institucional de exemplo (Sala A-101 na SEG 8:00-10:00)
+  // Reservas institucionais de exemplo (Sala A-101 em datas futuras)
   const ambA101 = await AppDataSource.query(`SELECT id FROM ambientes WHERE nome = 'Sala A-101' LIMIT 1`);
   if (ambA101[0]) {
     await AppDataSource.query(`
-      INSERT IGNORE INTO ambiente_reservas (ambiente_id, dia_semana, hora_inicio, hora_fim) VALUES
-      (${ambA101[0].id}, 'SEG', '08:00:00', '10:00:00'),
-      (${ambA101[0].id}, 'QUA', '10:00:00', '12:00:00')
+      INSERT IGNORE INTO ambiente_reservas (ambiente_id, data, hora_inicio, hora_fim) VALUES
+      (${ambA101[0].id}, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '08:00:00', '10:00:00'),
+      (${ambA101[0].id}, DATE_ADD(CURDATE(), INTERVAL 3 DAY), '10:00:00', '12:00:00')
     `);
     console.log('Reservas institucionais criadas.');
   }
