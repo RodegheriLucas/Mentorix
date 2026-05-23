@@ -1,12 +1,12 @@
 import {
-  IsArray, IsEnum, IsNotEmpty, IsString, MaxLength, ValidateNested, ArrayMinSize,
+  IsArray, IsEnum, IsNotEmpty, IsString, IsDateString, MaxLength, ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { CardCategoria, DiaSemana } from '../../../common/types/status.enum';
+import { CardCategoria } from '../../../common/types/status.enum';
 
 class DisponibilidadeDto {
-  @IsEnum(DiaSemana)
-  dia_semana: DiaSemana;
+  @IsDateString()
+  data: string;
 
   @IsString()
   hora_inicio: string;
@@ -33,7 +33,6 @@ export class CreateCardDto {
   tags: string[];
 
   @IsArray()
-  @ArrayMinSize(1, { message: 'Informe ao menos uma disponibilidade.' })
   @ValidateNested({ each: true })
   @Type(() => DisponibilidadeDto)
   disponibilidades: DisponibilidadeDto[];

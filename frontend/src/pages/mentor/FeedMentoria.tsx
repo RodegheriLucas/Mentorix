@@ -41,7 +41,7 @@ export const FeedMentoria: React.FC = () => {
     try {
       await api.post(`/feed/${selectedCard.id}/aceitar`, {
         ambienteId: selectedSlot.ambiente.id,
-        diaSemana: selectedSlot.dia_semana,
+        data: selectedSlot.data,
         horaInicio: selectedSlot.hora_inicio,
         horaFim: selectedSlot.hora_fim,
       });
@@ -130,7 +130,7 @@ export const FeedMentoria: React.FC = () => {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{slot.dia_semana} • {slot.hora_inicio} - {slot.hora_fim}</div>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{slot.data ? new Date(slot.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : ''} • {slot.hora_inicio} - {slot.hora_fim}</div>
                       <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
                         {slot.ambiente.nome} — {slot.ambiente.bloco}
                       </div>

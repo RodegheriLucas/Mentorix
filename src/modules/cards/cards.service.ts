@@ -32,6 +32,9 @@ export class CardsService {
   }
 
   async create(alunoId: number, dto: CreateCardDto, ip?: string): Promise<Card> {
+    if (dto.categoria === CardCategoria.GERAL && dto.disponibilidades.length === 0) {
+      throw new BadRequestException('Informe ao menos uma disponibilidade para cards Gerais.');
+    }
     this.validateSlots(dto.disponibilidades);
 
     const card = this.cardRepo.create({
