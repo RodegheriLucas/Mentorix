@@ -13,9 +13,9 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  font-family: var(--f-body);
+  background: #F2EFE9;
+  color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -26,12 +26,12 @@ body {
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--primary);
   text-decoration: none;
 }
 
 a:hover {
-  color: var(--color-primary-hover);
+  color: var(--primary-dark);
 }
 
 button {
@@ -43,28 +43,109 @@ input, textarea, select {
   font-family: inherit;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ─────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--color-bg-secondary); }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-border-hover); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
 
-/* Glassmorphism base */
-.glass {
-  background: var(--color-bg-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
+/* ── Design system utility classes ─────────── */
+
+/* Tags / pills */
+.mx-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 999px;
+  font-family: var(--f-body); font-size: 12px; font-weight: 500;
+  background: var(--primary-light); color: var(--primary-dark);
+  letter-spacing: -0.1px; white-space: nowrap;
+}
+.mx-tag.green { background: var(--secondary-light); color: var(--secondary-dark); }
+.mx-tag.accent { background: var(--accent-light); color: var(--accent-dark); }
+.mx-tag.gray { background: #F1F1F4; color: var(--text-2); }
+
+/* Typography */
+.mx-h1 { font-family: var(--f-head); font-weight: 700; font-size: 24px; letter-spacing: -0.5px; line-height: 1.15; color: var(--text); margin: 0; }
+.mx-h2 { font-family: var(--f-head); font-weight: 700; font-size: 20px; letter-spacing: -0.3px; line-height: 1.2; color: var(--text); margin: 0; }
+.mx-h3 { font-family: var(--f-head); font-weight: 500; font-size: 16px; letter-spacing: -0.1px; line-height: 1.3; color: var(--text); margin: 0; }
+.mx-body { font-family: var(--f-body); font-weight: 400; font-size: 14px; color: var(--text); line-height: 1.45; margin: 0; }
+.mx-caption { font-family: var(--f-body); font-weight: 400; font-size: 12px; color: var(--text-2); letter-spacing: 0; }
+
+/* Status dot */
+.mx-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.mx-status-dot.aberta { background: var(--primary); }
+.mx-status-dot.agendada { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-light); }
+.mx-status-dot.andamento { background: var(--secondary); box-shadow: 0 0 0 4px var(--secondary-light); }
+.mx-status-dot.concluida { background: var(--secondary); opacity: 0.55; }
+.mx-status-dot.cancelada { background: var(--accent-dark); }
+
+/* Pulse animation */
+.mx-pulse { animation: mxPulse 1.8s ease-in-out infinite; }
+@keyframes mxPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(230,74,25,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(230,74,25,0); }
 }
 
-/* Utils */
+/* Buttons */
+.mx-btn {
+  appearance: none; border: 0; cursor: pointer;
+  font-family: var(--f-body); font-weight: 500; font-size: 14px;
+  padding: 12px 18px; border-radius: 12px;
+  background: var(--primary); color: #fff;
+  letter-spacing: -0.1px;
+  transition: transform .12s ease, background .12s ease, box-shadow .15s ease;
+  box-shadow: 0 1px 0 rgba(58,40,133,0.25), 0 6px 18px rgba(93,70,184,0.25);
+}
+.mx-btn:hover { background: var(--primary-dark); }
+.mx-btn:active { transform: translateY(1px); }
+.mx-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.mx-btn.green {
+  background: var(--secondary);
+  box-shadow: 0 1px 0 rgba(27,94,32,0.25), 0 6px 18px rgba(46,125,50,0.22);
+}
+.mx-btn.green:hover { background: var(--secondary-dark); }
+.mx-btn.accent {
+  background: var(--accent);
+  box-shadow: 0 1px 0 rgba(191,54,12,0.25), 0 6px 18px rgba(230,74,25,0.25);
+}
+.mx-btn.accent:hover { background: var(--accent-dark); }
+.mx-btn.ghost {
+  background: #fff; color: var(--text); box-shadow: inset 0 0 0 1.5px var(--border);
+}
+.mx-btn.ghost:hover { background: var(--surface); }
+
+/* Card */
+.mx-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 1px 0 rgba(18,18,18,0.04), 0 1px 2px rgba(18,18,18,0.04);
+}
+
+/* Chat bubbles */
+.mx-bubble {
+  max-width: 76%; padding: 10px 14px; border-radius: 18px;
+  font-size: 14px; line-height: 1.4; word-wrap: break-word;
+}
+.mx-bubble.them { background: #F1F1F4; color: var(--text); border-bottom-left-radius: 6px; align-self: flex-start; }
+.mx-bubble.me { background: var(--primary); color: #fff; border-bottom-right-radius: 6px; align-self: flex-end; }
+
+/* Fade-up animation */
+@keyframes mxFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.mx-fadeup { animation: mxFadeUp .4s ease both; }
+.animate-fadeIn { animation: mxFadeUp .4s ease both; }
+
+/* Glass (legacy compat) */
+.glass {
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Util */
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); border: 0;
 }

@@ -41,7 +41,7 @@ export const AppRouter: React.FC = () => (
         <Route path="/login" element={<LoginPage />} />
 
         {/* ALUNO */}
-        <Route path="/aluno" element={<ProtectedRoute roles={['ALUNO']}><AppShell><AlunoDashboard /></AppShell></ProtectedRoute>} />
+        <Route path="/aluno" element={<ProtectedRoute roles={['ALUNO']}><AppShell><MeusCards /></AppShell></ProtectedRoute>} />
         <Route path="/aluno/novo-card" element={<ProtectedRoute roles={['ALUNO']}><AppShell><NovoCard /></AppShell></ProtectedRoute>} />
         <Route path="/aluno/meus-cards" element={<ProtectedRoute roles={['ALUNO']}><AppShell><MeusCards /></AppShell></ProtectedRoute>} />
         <Route path="/aluno/agendamentos" element={<ProtectedRoute roles={['ALUNO']}><AppShell><AgendamentosPage /></AppShell></ProtectedRoute>} />
