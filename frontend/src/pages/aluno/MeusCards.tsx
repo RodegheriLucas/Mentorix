@@ -259,16 +259,6 @@ function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: numbe
               </button>
             </div>
           )}
-
-          {['ACEITO'].includes(card.status) && (
-            <button onClick={() => onCancel(card.id)} style={{
-              marginTop: 10, padding: '8px 14px', borderRadius: 10,
-              border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
-              fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--accent)',
-            }}>
-              Cancelar solicitação
-            </button>
-          )}
         </div>
       </div>
     </div>
