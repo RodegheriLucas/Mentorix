@@ -1,9 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../config/api';
-import { StatusPill, Avatar, TopicBadge, WhatsAppButton, CheckInOutCard } from '../../components/ui/DesignSystem';
+import { StatusPill, Avatar, TopicBadge, WhatsAppButton, CheckInOutCard, MxLogo } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useAuth } from '../../contexts/AuthContext';
+
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg,#6f5ad0,#4632a0)',
+  'linear-gradient(135deg,#4a78d6,#2854b4)',
+  'linear-gradient(135deg,#8a6fe0,#5c3fc0)',
+  'linear-gradient(135deg,#e64a19,#bf360c)',
+  'linear-gradient(135deg,#506fc7,#2e4ea0)',
+  'linear-gradient(135deg,#7a5fd0,#4a35a0)',
+];
+
+function mentorGradient(nome: string) {
+  let hash = 0;
+  for (let i = 0; i < nome.length; i++) hash = (hash * 31 + nome.charCodeAt(i)) % AVATAR_GRADIENTS.length;
+  return AVATAR_GRADIENTS[Math.abs(hash)];
+}
 
 function initials(name: string) {
   return name?.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '??';
@@ -19,22 +34,47 @@ function stripeColor(status: string) {
 }
 
 const FILTER_TABS = [
-  { id: 'todas', label: 'Todas' },
-  { id: 'mentoria', label: 'Mentorias' },
-  { id: 'matchmaking', label: 'Em aberto' },
-  { id: 'historico', label: 'Histórico' },
+  { id: 'todas',      label: 'Todas' },
+  { id: 'mentoria',   label: 'Mentorias' },
+  { id: 'matchmaking',label: 'Matchmaking' },
+  { id: 'historico',  label: 'Histórico' },
 ];
+
+function AlunoHeader({ nome, email }: { nome: string; email: string }) {
+  const firstName = nome.split(' ')[0];
+  const ini = initials(nome);
+  return (
+    <div style={{ padding: '12px 0 14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <MxLogo size={20}/>
+          <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 16, letterSpacing: -0.2, color: 'var(--primary-dark)' }}>
+            mentorix
+          </span>
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase',
+            color: 'var(--primary-dark)', background: 'var(--primary-light)',
+            padding: '2px 6px', borderRadius: 6,
+          }}>Aluno</span>
+        </div>
+        <Avatar initials={ini} size={32} color={mentorGradient(nome)}/>
+      </div>
+      <h1 className="mx-h1" style={{ fontSize: 24 }}>Olá, {firstName}.</h1>
+      <p className="mx-caption" style={{ marginTop: 2 }}>{email}</p>
+    </div>
+  );
+}
 
 function FilterTabs({ active, onChange, counts }: {
   active: string; onChange: (id: string) => void; counts: Record<string, number>;
 }) {
   return (
-    <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 4, marginBottom: 14, overflowX: 'auto', scrollbarWidth: 'none' }}>
       {FILTER_TABS.map((t) => {
         const a = active === t.id;
         return (
           <button key={t.id} onClick={() => onChange(t.id)} style={{
-            padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
+            flexShrink: 0, padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
             border: a ? '1px solid var(--primary)' : '1px solid var(--border)',
             background: a ? 'var(--primary)' : '#fff',
             color: a ? '#fff' : 'var(--text)',
@@ -63,6 +103,8 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
   const mentor = card.agendamento?.mentor;
   const ag = card.agendamento;
 
+  const grad = mentor ? mentorGradient(mentor.nome) : undefined;
+
   const checkinData = ag ? {
     status: card.status,
     sala: ag.ambiente?.nome,
@@ -81,7 +123,11 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
       border: isLive ? '1.5px solid var(--secondary)' : '1px solid transparent',
     }}>
       <div style={{ display: 'flex' }}>
-        <div style={{ width: 4, background: stripeColor(card.status), opacity: isDone ? 0.5 : 1, flexShrink: 0 }}/>
+        {/* Status stripe */}
+        <div style={{
+          width: 4, background: stripeColor(card.status),
+          opacity: isDone ? 0.45 : 1, flexShrink: 0,
+        }}/>
         <div style={{ flex: 1, padding: 14 }}>
           {/* Title + Status */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
@@ -93,7 +139,7 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
 
           {/* Description */}
           <p className="mx-caption" style={{ marginBottom: 10, lineHeight: 1.45 }}>
-            {card.descricao?.substring(0, 140)}{card.descricao?.length > 140 ? '…' : ''}
+            {card.descricao?.substring(0, 140)}{(card.descricao?.length ?? 0) > 140 ? '…' : ''}
           </p>
 
           {/* Tags */}
@@ -111,15 +157,17 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
               display: 'flex', alignItems: 'center', gap: 10,
               marginBottom: (isLive || isAg) ? 10 : 0,
             }}>
-              <Avatar initials={initials(mentor.nome)} size={36}/>
+              <Avatar initials={initials(mentor.nome)} color={grad} size={36}/>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{mentor.nome}</div>
-                <div className="mx-caption" style={{ fontSize: 11 }}>{mentor.papel === 'PROFESSOR_MENTOR' ? 'Professor Mentor' : 'Mentor'}</div>
+                <div className="mx-caption" style={{ fontSize: 11 }}>
+                  {mentor.papel === 'PROFESSOR_MENTOR' ? 'Professor Mentor' : 'Mentor'}
+                </div>
               </div>
             </div>
           )}
 
-          {/* CheckInOut + WhatsApp */}
+          {/* CheckInOut + instrucoes + WhatsApp */}
           {(isLive || isAg) && checkinData && mentor && (
             <>
               <CheckInOutCard c={checkinData}/>
@@ -145,7 +193,7 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
             </>
           )}
 
-          {/* Status: pending gestor */}
+          {/* Pendente gestor */}
           {card.status === 'PENDENTE_GESTOR' && (
             <div style={{
               marginTop: 4, padding: '10px 12px', borderRadius: 10,
@@ -161,7 +209,7 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
             </div>
           )}
 
-          {/* Status: open / matchmaking */}
+          {/* Aberto / matchmaking */}
           {card.status === 'ABERTO' && (
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -174,24 +222,24 @@ function CardAluno({ card, onCancel }: { card: any; onCancel: (id: number) => vo
             </div>
           )}
 
-          {/* Concluded + needs rating */}
+          {/* Concluído */}
           {isDone && (
             <div style={{ marginTop: 4 }}>
               {checkinData && <CheckInOutCard c={checkinData}/>}
               <Link to="/aluno/avaliar" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginTop: 10, padding: '11px 14px', borderRadius: 12,
-                background: 'var(--accent)',
+                background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
                 boxShadow: '0 1px 0 rgba(191,54,12,0.25), 0 6px 16px rgba(230,74,25,0.25)',
                 color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13,
                 textDecoration: 'none',
               }}>
-                ★ Avaliar a mentoria
+                ★ Avaliar a mentoria {mentor ? `de ${mentor.nome.split(' ')[0]}` : ''}
               </Link>
             </div>
           )}
 
-          {/* Cancel */}
+          {/* Cancelar */}
           {['ABERTO', 'ACEITO'].includes(card.status) && (
             <button onClick={() => onCancel(card.id)} style={{
               marginTop: 10, padding: '8px 14px', borderRadius: 10,
@@ -223,54 +271,48 @@ export const MeusCards: React.FC = () => {
   };
 
   const filtered = React.useMemo(() => {
-    if (filter === 'mentoria') return cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status));
+    if (filter === 'mentoria')    return cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status));
     if (filter === 'matchmaking') return cards.filter((c) => ['ABERTO', 'ACEITO'].includes(c.status));
-    if (filter === 'historico') return cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status));
+    if (filter === 'historico')   return cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status));
     return cards;
   }, [cards, filter]);
 
   const counts = {
-    todas: cards.length,
-    mentoria: cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status)).length,
+    todas:       cards.length,
+    mentoria:    cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status)).length,
     matchmaking: cards.filter((c) => ['ABERTO', 'ACEITO'].includes(c.status)).length,
-    historico: cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status)).length,
+    historico:   cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status)).length,
   };
 
-  const firstName = user?.nome?.split(' ')[0] || 'Olá';
-
   return (
-    <div className="animate-fadeIn" style={{ maxWidth: 760 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <p className="mx-caption" style={{
-          fontFamily: 'var(--f-body)', fontSize: 10, fontWeight: 700, letterSpacing: 1,
-          textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 4,
-        }}>Aluno · UniMatch</p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <h1 className="mx-h1" style={{ fontSize: 26 }}>Olá, {firstName}.</h1>
-          <Link to="/aluno/novo-card" className="mx-btn" style={{ textDecoration: 'none', padding: '10px 16px', fontSize: 13 }}>
-            + Nova solicitação
-          </Link>
-        </div>
-        <p className="mx-caption" style={{ marginTop: 4 }}>{user?.email}</p>
-      </div>
+    <div className="animate-fadeIn">
+      <AlunoHeader nome={user?.nome || 'Usuário'} email={user?.email || ''}/>
 
       <FilterTabs active={filter} onChange={setFilter} counts={counts}/>
 
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1,2,3].map((i) => <Skeleton key={i} height={140}/>)}
+          {[1, 2, 3].map((i) => <Skeleton key={i} height={140}/>)}
         </div>
       )}
 
       {!loading && filtered.length === 0 && (
-        <div className="mx-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>📄</div>
-          <p style={{ marginBottom: 16 }}>
+        <div className="mx-card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 16, margin: '0 auto 14px',
+            background: 'var(--primary-light)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="3" stroke="var(--primary)" strokeWidth="1.8"/>
+              <path d="M3 10h18M8 5v5" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <p style={{ marginBottom: 16, fontSize: 14, color: 'var(--text-2)' }}>
             {filter === 'todas' ? 'Nenhuma solicitação criada ainda.' : 'Nada nessa categoria.'}
           </p>
           {filter === 'todas' && (
-            <Link to="/aluno/novo-card" className="mx-btn" style={{ textDecoration: 'none', display: 'inline-block' }}>
+            <Link to="/aluno/novo-card" className="mx-btn" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 13 }}>
               Criar primeira solicitação
             </Link>
           )}
