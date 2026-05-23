@@ -66,6 +66,12 @@ export const NovoCard: React.FC = () => {
       setSlotError('A hora de fim deve ser maior que a hora de início.');
       return;
     }
+    const [hI, mI] = novaHoraInicio.split(':').map(Number);
+    const [hF, mF] = novaHoraFim.split(':').map(Number);
+    if ((hF * 60 + mF) - (hI * 60 + mI) < 60) {
+      setSlotError('O horário deve ter no mínimo 1 hora de duração.');
+      return;
+    }
     const duplicate = slots.some(
       (s) => s.data === novaData && s.hora_inicio === novaHoraInicio && s.hora_fim === novaHoraFim,
     );
@@ -158,7 +164,7 @@ export const NovoCard: React.FC = () => {
                     transition: 'all 0.15s',
                   }}
                 >
-                  {cat === 'GERAL' ? '📘 Geral' : '🎓 TCC'}
+                  {cat === 'GERAL' ? 'Geral' : 'TCC'}
                 </button>
               ))}
             </div>

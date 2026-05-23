@@ -75,14 +75,14 @@ function SlotModal({ card, slots, loading, selectedSlot, onSelectSlot, onConfirm
     <div onClick={onClose} style={{
       position: 'fixed', inset: 0, background: 'rgba(18,18,18,0.5)',
       backdropFilter: 'blur(6px)', display: 'flex',
-      alignItems: 'flex-end', justifyContent: 'center', zIndex: 200,
+      alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000,
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth: 402,
         background: '#fff', borderRadius: '24px 24px 0 0',
         padding: '20px 20px 32px',
         boxShadow: '0 -8px 40px rgba(0,0,0,0.2)',
-        maxHeight: '80vh', overflowY: 'auto',
+        maxHeight: 680, overflowY: 'auto',
       }}>
         {/* Handle */}
         <div style={{
@@ -131,7 +131,7 @@ function SlotModal({ card, slots, loading, selectedSlot, onSelectSlot, onConfirm
                     }}/>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-                        {slot.dia_semana} · {slot.hora_inicio} – {slot.hora_fim}
+                        {slot.data ? new Date(slot.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {slot.hora_inicio} – {slot.hora_fim}
                       </div>
                       <div className="mx-caption" style={{ fontSize: 11 }}>
                         {slot.ambiente?.nome}{slot.ambiente?.bloco ? ` · ${slot.ambiente.bloco}` : ''}
