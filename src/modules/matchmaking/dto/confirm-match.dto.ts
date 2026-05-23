@@ -1,12 +1,11 @@
-import { IsNumber, IsString, IsEnum } from 'class-validator';
-import { DiaSemana } from '../../../common/types/status.enum';
+import { IsNumber, IsString, IsDateString } from 'class-validator';
 
 export class ConfirmMatchDto {
   @IsNumber()
   ambienteId: number;
 
-  @IsEnum(DiaSemana)
-  diaSemana: DiaSemana;
+  @IsDateString()
+  data: string;
 
   @IsString()
   horaInicio: string;

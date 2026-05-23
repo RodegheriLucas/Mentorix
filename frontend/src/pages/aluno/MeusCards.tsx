@@ -129,7 +129,12 @@ export const MeusCards: React.FC = () => {
                 ))}
               </div>
               <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                {card.disponibilidades?.map((d: any) => `${d.dia_semana} ${d.hora_inicio}-${d.hora_fim}`).join(' | ')}
+                {card.disponibilidades?.map((d: any) => {
+                  const label = d.data
+                    ? new Date(d.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })
+                    : '';
+                  return `${label} ${d.hora_inicio}-${d.hora_fim}`;
+                }).join(' | ')}
               </div>
             </div>
           ))}

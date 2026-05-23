@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ambiente } from './entities/ambiente.entity';
 import { AmbienteReserva } from './entities/ambiente-reserva.entity';
-import { AmbienteTipo, DiaSemana } from '../../common/types/status.enum';
+import { AmbienteTipo } from '../../common/types/status.enum';
 
 @Injectable()
 export class AmbientesService {
@@ -33,14 +33,14 @@ export class AmbientesService {
     return this.findById(id);
   }
 
-  async findFreeForSlot(diaSemana: DiaSemana, horaInicio: string, horaFim: string): Promise<{
+  async findFreeForSlot(data: string, horaInicio: string, horaFim: string): Promise<{
     salasFechadas: Ambiente[];
     ambientesComuns: Ambiente[];
   }> {
     const ocupados = await this.reservaRepo
       .createQueryBuilder('r')
       .select('r.ambiente_id')
-      .where('r.dia_semana = :dia', { dia: diaSemana })
+      .where('r.data = :data', { data })
       .andWhere('r.hora_inicio < :hfim', { hfim: horaFim })
       .andWhere('r.hora_fim > :hinicio', { hinicio: horaInicio })
       .getRawMany();
@@ -65,20 +65,20 @@ export class AmbientesService {
 
   async createReserva(
     ambienteId: number,
-    diaSemana: DiaSemana,
+    data: string,
     horaInicio: string,
     horaFim: string,
     agendamentoId?: number,
   ): Promise<AmbienteReserva> {
     const existing = await this.reservaRepo.findOne({
-      where: { ambiente_id: ambienteId, dia_semana: diaSemana, hora_inicio: horaInicio, hora_fim: horaFim },
+      where: { ambiente_id: ambienteId, data, hora_inicio: horaInicio, hora_fim: horaFim },
     });
     if (existing) throw new ConflictException('Horário já reservado para este ambiente.');
 
     return this.reservaRepo.save(
       this.reservaRepo.create({
         ambiente_id: ambienteId,
-        dia_semana: diaSemana,
+        data,
         hora_inicio: horaInicio,
         hora_fim: horaFim,
         agendamento_id: agendamentoId,

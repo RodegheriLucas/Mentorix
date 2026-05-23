@@ -3,7 +3,6 @@ import {
   ManyToOne, JoinColumn,
 } from 'typeorm';
 import { Card } from './card.entity';
-import { DiaSemana } from '../../../common/types/status.enum';
 
 @Entity('disponibilidades')
 export class Disponibilidade {
@@ -17,8 +16,8 @@ export class Disponibilidade {
   @JoinColumn({ name: 'card_id' })
   card: Card;
 
-  @Column({ name: 'dia_semana', type: 'enum', enum: DiaSemana })
-  dia_semana: DiaSemana;
+  @Column({ name: 'data', type: 'date' })
+  data: string;
 
   @Column({ name: 'hora_inicio', type: 'time' })
   hora_inicio: string;

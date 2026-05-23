@@ -5,7 +5,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Card } from '../../cards/entities/card.entity';
 import { Ambiente } from '../../ambientes/entities/ambiente.entity';
-import { AgendamentoStatus, DiaSemana } from '../../../common/types/status.enum';
+import { AgendamentoStatus } from '../../../common/types/status.enum';
 
 @Entity('agendamentos')
 export class Agendamento {
@@ -33,8 +33,8 @@ export class Agendamento {
   @JoinColumn({ name: 'ambiente_id' })
   ambiente: Ambiente;
 
-  @Column({ name: 'dia_semana', type: 'enum', enum: DiaSemana })
-  dia_semana: DiaSemana;
+  @Column({ name: 'data', type: 'date' })
+  data: string;
 
   @Column({ name: 'hora_inicio', type: 'time' })
   hora_inicio: string;
