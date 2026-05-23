@@ -12,3 +12,4 @@ uploads/
 *.tsbuildinfo
 frontend/node_modules/
 frontend/dist/
+claude.md
