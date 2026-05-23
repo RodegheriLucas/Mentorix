@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateHistoricoEncontros1700000007 implements MigrationInterface {
+export class CreateHistoricoEncontros1700000007000 implements MigrationInterface {
   async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS historico_encontros (
