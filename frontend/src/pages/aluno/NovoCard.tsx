@@ -18,11 +18,11 @@ export const NovoCard: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (slots.length === 0) { setError('Adicione pelo menos um horário de disponibilidade.'); return; }
+    if (categoria === 'GERAL' && slots.length === 0) { setError('Adicione pelo menos um horário de disponibilidade.'); return; }
     setError('');
     setLoading(true);
     try {
-      await api.post('/cards', { titulo, descricao, categoria, tags, disponibilidades: slots });
+      await api.post('/cards', { titulo, descricao, categoria, tags, disponibilidades: categoria === 'GERAL' ? slots : [] });
       navigate('/aluno/meus-cards');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao criar solicitação.');
@@ -96,11 +96,13 @@ export const NovoCard: React.FC = () => {
           </div>
         </div>
 
-        <div className="glass" style={{ borderRadius: 'var(--border-radius)', padding: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Disponibilidade Horária</h2>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Clique ou arraste para selecionar seus horários disponíveis (mínimo 1h por slot).</p>
-          <AvailabilityGrid value={slots} onChange={setSlots} />
-        </div>
+        {categoria === 'GERAL' && (
+          <div className="glass" style={{ borderRadius: 'var(--border-radius)', padding: 24 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16 }}>Disponibilidade Horária</h2>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Clique ou arraste para selecionar seus horários disponíveis (mínimo 1h por slot).</p>
+            <AvailabilityGrid value={slots} onChange={setSlots} />
+          </div>
+        )}
 
         {error && (
           <div style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 8, padding: '12px 16px', fontSize: 13, color: 'var(--color-danger)' }}>
