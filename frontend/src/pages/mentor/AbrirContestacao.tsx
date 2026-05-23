@@ -24,7 +24,7 @@ export const AbrirContestacao: React.FC = () => {
     setSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('historico_id', String(selected));
+      formData.append('agendamento_id', String(selected));
       formData.append('justificativa', justificativa);
       if (foto) formData.append('foto', foto);
       await api.post('/disputas', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
