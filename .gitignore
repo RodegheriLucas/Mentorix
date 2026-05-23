@@ -1,0 +1,13 @@
+.claude
+.agents
+.env
+.skills-lock.json
+docker-compose.yml
+docs
+.env.example
+node_modules/
+dist/
+uploads/
+*.log
+frontend/node_modules/
+frontend/dist/

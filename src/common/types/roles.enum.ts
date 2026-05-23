@@ -1,0 +1,8 @@
+export enum Role {
+  ALUNO = 'ALUNO',
+  ALUNO_MENTOR = 'ALUNO_MENTOR',
+  PROFESSOR_MENTOR = 'PROFESSOR_MENTOR',
+  GESTOR = 'GESTOR',
+}
+
+export type MentorRole = Role.ALUNO_MENTOR | Role.PROFESSOR_MENTOR;
