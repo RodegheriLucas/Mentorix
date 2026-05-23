@@ -1,6 +1,5 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
-import { Header } from './Header';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -8,14 +7,17 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#F2EFE9' }}>
       <Sidebar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', marginLeft: 'var(--sidebar-width)' }}>
-        <Header />
-        <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-          {children}
-        </main>
-      </div>
+      <main style={{
+        flex: 1,
+        marginLeft: 'var(--sidebar-width)',
+        padding: '28px 32px',
+        overflowY: 'auto',
+        minHeight: '100vh',
+      }}>
+        {children}
+      </main>
     </div>
   );
 };

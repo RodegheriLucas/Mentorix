@@ -88,14 +88,14 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ value, onCha
             <tr>
               <th style={{ padding: '8px', color: 'var(--color-text-muted)', fontSize: 12, width: 60 }}></th>
               {DIAS.map((d) => (
-                <th key={d} style={{ padding: '8px 4px', color: 'var(--color-text-secondary)', fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{d}</th>
+                <th key={d} style={{ padding: '8px 4px', color: 'var(--text-2)', fontSize: 11, fontWeight: 600, textAlign: 'center', letterSpacing: 0.5 }}>{d}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {HORAS.map((hora) => (
               <tr key={hora}>
-                <td style={{ padding: '4px 8px', color: 'var(--color-text-muted)', fontSize: 12, textAlign: 'right' }}>{hora}</td>
+                <td style={{ padding: '4px 8px', color: 'var(--text-3)', fontSize: 10, textAlign: 'right', fontFamily: 'monospace' }}>{hora}</td>
                 {DIAS.map((dia) => {
                   const sel = isSelected(value, dia, hora);
                   return (
@@ -105,13 +105,13 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ value, onCha
                         onMouseEnter={() => { if (dragging && !readonly) toggleCell(dia, hora); }}
                         style={{
                           width: '100%',
-                          height: 28,
+                          height: 24,
                           borderRadius: 4,
-                          background: sel ? 'var(--color-primary)' : 'var(--color-bg-glass)',
-                          border: `1px solid ${sel ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                          background: sel ? 'var(--primary)' : '#fff',
+                          border: `1px solid ${sel ? 'var(--primary)' : 'var(--border)'}`,
                           cursor: readonly ? 'default' : 'pointer',
-                          transition: 'all 0.15s',
-                          boxShadow: sel ? 'var(--shadow-primary)' : 'none',
+                          transition: 'background .12s',
+                          boxShadow: sel ? '0 2px 6px rgba(93,70,184,0.20)' : 'none',
                         }}
                       />
                     </td>
@@ -123,32 +123,18 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ value, onCha
         </table>
       </div>
 
-      <div style={{ marginTop: 16, minHeight: 48 }}>
-        {value.length > 0 && (
-          <>
-            <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginBottom: 8 }}>Horários selecionados:</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {value.map((s, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  background: 'var(--color-primary-light)',
-                  border: '1px solid var(--color-primary)',
-                  borderRadius: 6, padding: '4px 10px', fontSize: 13,
-                }}>
-                  <span>📅 {formatSlot(s)}</span>
-                  {!readonly && (
-                    <button
-                      type="button"
-                      onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-                      style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
-                    >×</button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      {value.length > 0 && (
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: 'var(--primary-light)' }}>
+          <span style={{ fontSize: 12, color: 'var(--primary-dark)', fontWeight: 500 }}>
+            <strong>{value.length}</strong> slot{value.length !== 1 ? 's' : ''} selecionado{value.length !== 1 ? 's' : ''}
+          </span>
+          {!readonly && (
+            <button type="button" onClick={() => onChange([])} style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--primary)', fontSize: 12, fontWeight: 500 }}>
+              Limpar
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
