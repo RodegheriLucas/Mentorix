@@ -5,10 +5,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Card } from './entities/card.entity';
 import { Disponibilidade } from './entities/disponibilidade.entity';
+import { CardPreferencia } from './entities/card-preferencia.entity';
 import { CreateCardDto } from './dto/create-card.dto';
 import { CardStatus, CardCategoria } from '../../common/types/status.enum';
-import { Role } from '../../common/types/roles.enum';
 import { AuditService } from '../audit/audit.service';
+
+export interface TccFeedItem {
+  card: Card;
+  is_preferido: boolean;
+  tem_preferencias: boolean;
+}
 
 @Injectable()
 export class CardsService {
@@ -17,6 +23,8 @@ export class CardsService {
     private readonly cardRepo: Repository<Card>,
     @InjectRepository(Disponibilidade)
     private readonly dispRepo: Repository<Disponibilidade>,
+    @InjectRepository(CardPreferencia)
+    private readonly prefRepo: Repository<CardPreferencia>,
     private readonly auditService: AuditService,
   ) {}
 
@@ -67,6 +75,13 @@ export class CardsService {
     );
     await this.dispRepo.save(disps);
 
+    if (dto.categoria === CardCategoria.TCC && dto.professores_preferidos?.length) {
+      const prefs = dto.professores_preferidos.map((profId) =>
+        this.prefRepo.create({ card_id: saved.id, professor_id: profId }),
+      );
+      await this.prefRepo.save(prefs);
+    }
+
     const full = await this.findById(saved.id);
     await this.auditService.log(alunoId, 'CARD_CRIADO', 'cards_ajuda', saved.id, null, { titulo: dto.titulo }, ip);
 
@@ -76,7 +91,7 @@ export class CardsService {
   async findById(id: number): Promise<Card> {
     const card = await this.cardRepo.findOne({
       where: { id },
-      relations: ['aluno', 'disponibilidades'],
+      relations: ['aluno', 'disponibilidades', 'preferencias', 'preferencias.professor'],
     });
     if (!card) throw new NotFoundException('Card não encontrado.');
     return card;
@@ -85,7 +100,7 @@ export class CardsService {
   async findByAluno(alunoId: number): Promise<Card[]> {
     return this.cardRepo.find({
       where: { aluno_id: alunoId },
-      relations: ['disponibilidades'],
+      relations: ['disponibilidades', 'preferencias', 'preferencias.professor'],
       order: { criado_em: 'DESC' },
     });
   }
@@ -95,11 +110,46 @@ export class CardsService {
       .createQueryBuilder('card')
       .leftJoinAndSelect('card.aluno', 'aluno')
       .leftJoinAndSelect('card.disponibilidades', 'disp')
+      .leftJoinAndSelect('card.preferencias', 'pref')
+      .leftJoinAndSelect('pref.professor', 'prefProf')
       .where('card.categoria = :categoria', { categoria })
       .andWhere('card.status = :status', { status: CardStatus.ABERTO })
       .orderBy('card.criado_em', 'DESC');
 
     return qb.getMany();
+  }
+
+  async findTccFeedForProfessor(professorId: number): Promise<TccFeedItem[]> {
+    const allTcc = await this.cardRepo
+      .createQueryBuilder('card')
+      .leftJoinAndSelect('card.aluno', 'aluno')
+      .leftJoinAndSelect('card.disponibilidades', 'disp')
+      .leftJoinAndSelect('card.preferencias', 'pref')
+      .leftJoinAndSelect('pref.professor', 'prefProf')
+      .where('card.categoria = :categoria', { categoria: CardCategoria.TCC })
+      .andWhere('card.status = :status', { status: CardStatus.ABERTO })
+      .orderBy('card.criado_em', 'DESC')
+      .getMany();
+
+    const items: TccFeedItem[] = [];
+    for (const card of allTcc) {
+      const tem_preferencias = card.preferencias.length > 0;
+      const is_preferido = card.preferencias.some((p) => p.professor_id === professorId);
+
+      // Se o card tem preferências mas este professor não está na lista, não exibir
+      if (tem_preferencias && !is_preferido) continue;
+
+      items.push({ card, is_preferido, tem_preferencias });
+    }
+
+    // Preferidos primeiro
+    items.sort((a, b) => {
+      if (a.is_preferido && !b.is_preferido) return -1;
+      if (!a.is_preferido && b.is_preferido) return 1;
+      return 0;
+    });
+
+    return items;
   }
 
   async update(cardId: number, alunoId: number, dto: Partial<CreateCardDto>): Promise<Card> {

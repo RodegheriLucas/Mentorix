@@ -47,7 +47,7 @@ const navItems: Array<NavItem & { iconId: string; }> = [
   // PROFESSOR
   { to: '/professor', label: 'Dashboard', iconId: 'portaria', roles: ['PROFESSOR_MENTOR'] },
   { to: '/professor/feed', label: 'Feed TCC', iconId: 'feed', roles: ['PROFESSOR_MENTOR'] },
-  { to: '/professor/agendamentos', label: 'Agendamentos', iconId: 'agenda', roles: ['PROFESSOR_MENTOR'] },
+  { to: '/professor/agendamentos', label: 'Orienta\u00e7\u00f5es', iconId: 'agenda', roles: ['PROFESSOR_MENTOR'] },
   // GESTOR
   { to: '/gestor', label: 'Dashboard', iconId: 'dashboard-gestor', roles: ['GESTOR'] },
   { to: '/gestor/portaria', label: 'Painel de Portaria', iconId: 'portaria', roles: ['GESTOR'] },
@@ -69,7 +69,7 @@ export const Sidebar: React.FC = () => {
   const rolePt: Record<string, string> = {
     ALUNO: 'Aluno',
     ALUNO_MENTOR: 'Mentor',
-    PROFESSOR_MENTOR: 'Professor',
+    PROFESSOR_MENTOR: 'Orientador',
     GESTOR: 'Gestor',
   };
 

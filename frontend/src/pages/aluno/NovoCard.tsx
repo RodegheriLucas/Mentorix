@@ -1,6 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
+
+interface Professor {
+  id: number;
+  nome: string;
+  email: string;
+  tags_competencia: string[];
+  avatar_url: string | null;
+}
 
 interface DateSlot {
   data: string;
@@ -74,6 +82,51 @@ export const NovoCard: React.FC = () => {
   const [documentoError, setDocumentoError] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
+  // TCC professor preferences
+  const [professores, setProfessores] = useState<Professor[]>([]);
+  const [professoresPreferidos, setProfessoresPreferidos] = useState<number[]>([]);
+  const [profSearch, setProfSearch] = useState('');
+  const [profOpen, setProfOpen] = useState(false);
+  const [profLoading, setProfLoading] = useState(false);
+  const [profError, setProfError] = useState('');
+
+  useEffect(() => {
+    if (categoria !== 'TCC' || professores.length > 0 || profLoading) return;
+
+    let active = true;
+
+    const loadProfessores = async () => {
+      setProfLoading(true);
+      setProfError('');
+
+      try {
+        const response = await api.get('/users', {
+          params: { papel: 'PROFESSOR_MENTOR' },
+        });
+
+        if (!active) return;
+        setProfessores(Array.isArray(response.data) ? response.data : []);
+      } catch {
+        try {
+          const fallback = await api.get('/users/professores/lista');
+          if (!active) return;
+          setProfessores(Array.isArray(fallback.data) ? fallback.data : []);
+        } catch {
+          if (!active) return;
+          setProfError('Não foi possível carregar os professores agora. Verifique se a API foi reiniciada e tente novamente.');
+        }
+      } finally {
+        if (active) setProfLoading(false);
+      }
+    };
+
+    loadProfessores();
+
+    return () => {
+      active = false;
+    };
+  }, [categoria]);
+
   const toggleTopic = (t: string) => {
     setSelectedTopics((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
   };
@@ -140,6 +193,7 @@ export const NovoCard: React.FC = () => {
         categoria,
         tags: categoria === 'TCC' ? [] : selectedTopics,
         disponibilidades: categoria === 'GERAL' ? slots : [],
+        professores_preferidos: categoria === 'TCC' ? professoresPreferidos : [],
       });
 
       if (categoria === 'TCC' && documento) {
@@ -289,8 +343,9 @@ export const NovoCard: React.FC = () => {
             </Field>
           )}
 
-          {/* Documento — visível apenas para TCC */}
+          {/* Documento + Professor selector — visíveis apenas para TCC */}
           {categoria === 'TCC' && (
+            <>
             <Field
               label="Documento de apoio"
               hint="Opcional — envie um arquivo que ajude o professor a entender o seu TCC"
@@ -402,6 +457,176 @@ export const NovoCard: React.FC = () => {
                 <p style={{ fontSize: 12, color: 'var(--accent-dark)', marginTop: 6 }}>{documentoError}</p>
               )}
             </Field>
+
+            {/* Professor selector */}
+            <Field
+              label="Preferência de professor"
+              hint="Opcional — indique quem você gostaria que orientasse seu TCC"
+            >
+              {/* Info banner */}
+              <div style={{
+                padding: '10px 14px', borderRadius: 10,
+                background: professoresPreferidos.length === 0 ? '#FFF7E0' : 'var(--primary-light)',
+                border: `1px solid ${professoresPreferidos.length === 0 ? '#E0A800' : 'var(--primary)'}`,
+                fontSize: 12, color: professoresPreferidos.length === 0 ? '#7A5800' : 'var(--primary-dark)',
+                marginBottom: 10, lineHeight: 1.5,
+              }}>
+                {professoresPreferidos.length === 0
+                  ? 'Sem preferência selecionada — qualquer professor poderá enviar uma contra-proposta para você analisar antes de confirmar.'
+                  : `${professoresPreferidos.length} professor${professoresPreferidos.length > 1 ? 'es' : ''} selecionado${professoresPreferidos.length > 1 ? 's' : ''} — apenas eles verão seu card em destaque e poderão aceitar diretamente.`}
+              </div>
+
+              {/* Search trigger */}
+              <button
+                type="button"
+                onClick={() => setProfOpen((o) => !o)}
+                style={{
+                  width: '100%', textAlign: 'left', padding: '12px 14px', borderRadius: 12,
+                  border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  fontFamily: 'var(--f-body)', fontSize: 14, color: 'var(--text)',
+                }}
+              >
+                <span style={{ color: 'var(--text-3)' }}>
+                  {profLoading ? 'Carregando professores…' : 'Buscar professor…'}
+                </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 9l6 6 6-6" stroke="var(--text-2)" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+
+              {profError && (
+                <p style={{ fontSize: 12, color: 'var(--accent-dark)', marginTop: 6 }}>{profError}</p>
+              )}
+
+              {/* Selected professors chips */}
+              {professoresPreferidos.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                  {professoresPreferidos.map((pid) => {
+                    const prof = professores.find((p) => p.id === pid);
+                    if (!prof) return null;
+                    const ini = (prof.nome || '').split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
+                    return (
+                      <div key={pid} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        padding: '6px 10px 6px 8px', borderRadius: 999,
+                        background: 'var(--primary)', color: '#fff',
+                        fontFamily: 'var(--f-body)', fontSize: 12, fontWeight: 500,
+                      }}>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.25)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 9, fontWeight: 700, flexShrink: 0,
+                        }}>{ini}</div>
+                        {(prof.nome || '').split(' ')[0]}
+                        <button
+                          type="button"
+                          onClick={() => setProfessoresPreferidos((prev) => prev.filter((id) => id !== pid))}
+                          style={{
+                            background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)',
+                            cursor: 'pointer', padding: 0, fontSize: 14, lineHeight: 1,
+                          }}
+                        >×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Dropdown list */}
+              {profOpen && (
+                <div style={{
+                  marginTop: 8, borderRadius: 14, overflow: 'hidden',
+                  border: '1px solid var(--border)', background: '#fff',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                }}>
+                  <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Nome do professor…"
+                      value={profSearch}
+                      onChange={(e) => setProfSearch(e.target.value)}
+                      style={{ ...inputStyle, padding: '8px 12px', fontSize: 13 }}
+                    />
+                  </div>
+                  <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+                    {profLoading && (
+                      <div style={{ padding: '16px', textAlign: 'center', fontSize: 13, color: 'var(--text-3)' }}>
+                        Carregando professores…
+                      </div>
+                    )}
+                    {professores
+                      .filter((p) => (p.nome || '').toLowerCase().includes(profSearch.toLowerCase()))
+                      .map((prof) => {
+                        const selected = professoresPreferidos.includes(prof.id);
+                        const ini = (prof.nome || '').split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
+                        return (
+                          <button
+                            key={prof.id}
+                            type="button"
+                            onClick={() => {
+                              setProfessoresPreferidos((prev) =>
+                                selected ? prev.filter((id) => id !== prof.id) : [...prev, prof.id]
+                              );
+                            }}
+                            style={{
+                              width: '100%', textAlign: 'left', padding: '10px 14px',
+                              border: 'none', cursor: 'pointer', display: 'flex',
+                              alignItems: 'center', gap: 10,
+                              background: selected ? 'var(--primary-light)' : '#fff',
+                              borderBottom: '1px solid var(--border)',
+                            }}
+                          >
+                            <div style={{
+                              width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                              background: selected ? 'var(--primary)' : 'linear-gradient(135deg,#6f5ad0,#4632a0)',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 11, fontWeight: 700, color: '#fff',
+                            }}>{ini}</div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+                                {prof.nome}
+                              </div>
+                              {Array.isArray(prof.tags_competencia) && prof.tags_competencia.length > 0 && (
+                                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 1 }}>
+                                  {prof.tags_competencia.slice(0, 3).map((t) => `#${t}`).join(' · ')}
+                                </div>
+                              )}
+                            </div>
+                            {selected && (
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" fill="var(--primary)"/>
+                                <path d="M7 12l4 4 6-7" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </button>
+                        );
+                      })}
+                    {!profLoading && professores.filter((p) => (p.nome || '').toLowerCase().includes(profSearch.toLowerCase())).length === 0 && (
+                      <div style={{ padding: '16px', textAlign: 'center', fontSize: 13, color: 'var(--text-3)' }}>
+                        Nenhum professor encontrado.
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ padding: '10px 14px', borderTop: '1px solid var(--border)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setProfOpen(false)}
+                      style={{
+                        width: '100%', padding: '8px 0', borderRadius: 10,
+                        border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
+                        fontFamily: 'var(--f-body)', fontSize: 13, fontWeight: 500, color: 'var(--text-2)',
+                      }}
+                    >
+                      Confirmar seleção
+                    </button>
+                  </div>
+                </div>
+              )}
+            </Field>
+            </>
           )}
         </div>
 

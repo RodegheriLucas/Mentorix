@@ -4,6 +4,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Disponibilidade } from './disponibilidade.entity';
+import { CardPreferencia } from './card-preferencia.entity';
 import { CardStatus, CardCategoria } from '../../../common/types/status.enum';
 
 @Entity('cards_ajuda')
@@ -38,6 +39,9 @@ export class Card {
 
   @OneToMany(() => Disponibilidade, (d) => d.card, { cascade: true, eager: true })
   disponibilidades: Disponibilidade[];
+
+  @OneToMany(() => CardPreferencia, (p) => p.card, { cascade: true, eager: true })
+  preferencias: CardPreferencia[];
 
   @CreateDateColumn({ name: 'criado_em' })
   criado_em: Date;

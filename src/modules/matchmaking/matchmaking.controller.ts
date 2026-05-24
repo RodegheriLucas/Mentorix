@@ -20,9 +20,11 @@ export class MatchmakingController {
   ) {}
 
   @Get()
-  getFeed(@CurrentUser() user: any) {
-    const categoria = user.papel === Role.ALUNO_MENTOR ? CardCategoria.GERAL : CardCategoria.TCC;
-    return this.cardsService.findByCategoria(categoria, user.tags_competencia);
+  async getFeed(@CurrentUser() user: any) {
+    if (user.papel === Role.PROFESSOR_MENTOR) {
+      return this.cardsService.findTccFeedForProfessor(user.id);
+    }
+    return this.cardsService.findByCategoria(CardCategoria.GERAL, user.tags_competencia);
   }
 
   @Get(':cardId/slots')
@@ -38,5 +40,15 @@ export class MatchmakingController {
     @Req() req: any,
   ) {
     return this.matchmakingService.confirmMatch(cardId, user.id, dto, req.ip);
+  }
+
+  @Post(':cardId/aceitar-tcc')
+  @Roles(Role.PROFESSOR_MENTOR)
+  aceitarTcc(
+    @Param('cardId', ParseIntPipe) cardId: number,
+    @CurrentUser() user: any,
+    @Req() req: any,
+  ) {
+    return this.matchmakingService.confirmMatchTcc(cardId, user.id, req.ip);
   }
 }
