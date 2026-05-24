@@ -2,7 +2,9 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Agendamento } from './entities/agendamento.entity';
-import { AgendamentoStatus } from '../../common/types/status.enum';
+import { Card } from '../cards/entities/card.entity';
+import { AmbienteReserva } from '../ambientes/entities/ambiente-reserva.entity';
+import { AgendamentoStatus, CardStatus } from '../../common/types/status.enum';
 import { Role } from '../../common/types/roles.enum';
 import { AuditService } from '../audit/audit.service';
 
@@ -11,6 +13,10 @@ export class AgendamentosService {
   constructor(
     @InjectRepository(Agendamento)
     private readonly agendamentoRepo: Repository<Agendamento>,
+    @InjectRepository(Card)
+    private readonly cardRepo: Repository<Card>,
+    @InjectRepository(AmbienteReserva)
+    private readonly reservaRepo: Repository<AmbienteReserva>,
     private readonly auditService: AuditService,
   ) {}
 
@@ -73,6 +79,13 @@ export class AgendamentosService {
     if (!cancelaveis.includes(a.status)) throw new BadRequestException('Não é possível cancelar neste status.');
 
     await this.agendamentoRepo.update(id, { status: AgendamentoStatus.CANCELADO });
+
+    // Remove a reserva do ambiente para liberar o horário
+    await this.reservaRepo.delete({ agendamento_id: id });
+
+    if (a.card_id) {
+      await this.cardRepo.update(a.card_id, { status: CardStatus.ABERTO });
+    }
   }
 
   async findPendentesGestor(): Promise<Agendamento[]> {
