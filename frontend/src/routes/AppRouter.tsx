@@ -19,6 +19,7 @@ import { MinhasHoras } from '../pages/mentor/MinhasHoras';
 import { AbrirContestacao } from '../pages/mentor/AbrirContestacao';
 
 // Gestor
+import { GestorDashboard } from '../pages/gestor/GestorDashboard';
 import { PainelPortaria } from '../pages/gestor/PainelPortaria';
 import { GerenciarAmbientes } from '../pages/gestor/GerenciarAmbientes';
 import { ResolverDisputas } from '../pages/gestor/ResolverDisputas';
