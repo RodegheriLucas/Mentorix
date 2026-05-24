@@ -116,7 +116,6 @@ function CardPendente({ item, isOpen, onToggle, nota, depoimento, submitting, er
   return (
     <div className="mx-card" style={{ overflow: 'hidden', marginBottom: 12 }}>
       <div style={{ display: 'flex' }}>
-        <div style={{ width: 4, background: 'var(--primary)', flexShrink: 0 }} />
         <div style={{ flex: 1, padding: 14 }}>
           <div onClick={onToggle} style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
@@ -238,7 +237,6 @@ function CardAvaliado({ item, isOpen, onToggle }: { item: AvaliacaoHistorico; is
   return (
     <div className="mx-card" style={{ overflow: 'hidden', marginBottom: 12 }}>
       <div style={{ display: 'flex' }}>
-        <div style={{ width: 4, background: 'rgba(46,125,50,0.5)', flexShrink: 0 }} />
         <div style={{ flex: 1, padding: 14 }}>
           <div onClick={onToggle} style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
@@ -308,13 +306,11 @@ function CardAvaliado({ item, isOpen, onToggle }: { item: AvaliacaoHistorico; is
 
 function CardFinalizado({ card, isOpen, onToggle }: { card: any; isOpen: boolean; onToggle: () => void }) {
   const isCancelled = card.status === 'CANCELADO';
-  const stripe = isCancelled ? 'var(--accent-dark)' : '#9E9E9E';
   const tags: string[] = card.tags || [];
 
   return (
     <div className="mx-card" style={{ overflow: 'hidden', marginBottom: 12, opacity: 0.82 }}>
       <div style={{ display: 'flex' }}>
-        <div style={{ width: 4, background: stripe, flexShrink: 0 }} />
         <div style={{ flex: 1, padding: 14 }}>
           <div onClick={onToggle} style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
