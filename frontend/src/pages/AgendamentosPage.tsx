@@ -45,9 +45,10 @@ const HOURS_CAL = Array.from({ length: 13 }, (_, i) => 8 + i);
 const ROW_H = 44;
 
 function statusCalColor(status: string) {
-  if (status === 'EM_ANDAMENTO') return 'linear-gradient(135deg,#2E7D32,#1B5E20)';
-  if (status === 'AGENDADO') return 'linear-gradient(135deg,#E64A19,#BF360C)';
+  if (status === 'EM_ANDAMENTO')    return 'linear-gradient(135deg,#2E7D32,#1B5E20)';
+  if (status === 'AGENDADO')        return 'linear-gradient(135deg,#E64A19,#BF360C)';
   if (status === 'PENDENTE_GESTOR') return 'linear-gradient(135deg,#E8B33A,#A37800)';
+  if (status === 'CONCLUIDO')       return 'linear-gradient(135deg,rgba(46,125,50,0.6),rgba(27,94,32,0.6))';
   return 'linear-gradient(135deg,#5D46B8,#3A2885)';
 }
 
@@ -117,6 +118,7 @@ function CalendarView({ items }: { items: any[] }) {
             const startRow = startH - 8;
             const title = ag.card?.titulo || 'Orientação';
             const init  = initials(ag.card?.aluno?.nome || ag.mentor?.nome || '?');
+            const isDone = ag.status === 'CONCLUIDO';
 
             return (
               <div key={ag.id} style={{
@@ -129,7 +131,8 @@ function CalendarView({ items }: { items: any[] }) {
                 borderRadius: 8, padding: '6px 7px',
                 background: statusCalColor(ag.status), color: '#fff',
                 overflow: 'hidden', cursor: 'default',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.10)',
+                opacity: isDone ? 0.75 : 1,
+                boxShadow: isDone ? 'none' : '0 2px 6px rgba(0,0,0,0.10)',
                 display: 'flex', flexDirection: 'column', gap: 2,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -160,6 +163,7 @@ function CalendarView({ items }: { items: any[] }) {
           { color: 'linear-gradient(135deg,#2E7D32,#1B5E20)', label: 'Em andamento' },
           { color: 'linear-gradient(135deg,#E64A19,#BF360C)', label: 'Agendado' },
           { color: 'linear-gradient(135deg,#E8B33A,#A37800)', label: 'Pendente gestor' },
+          { color: 'linear-gradient(135deg,rgba(46,125,50,0.6),rgba(27,94,32,0.6))', label: 'Concluído' },
         ].map((l) => (
           <span key={l.label} style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -356,7 +360,7 @@ export const AgendamentosPage: React.FC = () => {
           <ViewToggle view={view} onChange={setView}/>
 
           {view === 'calendario' ? (
-            <CalendarView items={agendamentos}/>
+            <CalendarView items={agendamentos.filter((a) => a.status !== 'CANCELADO')}/>
           ) : (
             <>
               {agendamentos.length === 0 && (

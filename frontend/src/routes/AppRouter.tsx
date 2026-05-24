@@ -10,7 +10,6 @@ import { ContaPage } from '../pages/ContaPage';
 // Aluno
 import { NovoCard } from '../pages/aluno/NovoCard';
 import { MeusCards } from '../pages/aluno/MeusCards';
-import { AvaliarEncontro } from '../pages/aluno/AvaliarEncontro';
 import { HistoricoMentorias } from '../pages/aluno/HistoricoMentorias';
 
 // Mentor / Professor
@@ -62,7 +61,6 @@ export const AppRouter: React.FC = () => (
         <Route path="/aluno/editar-card/:id" element={<MW roles={['ALUNO']}><NovoCard /></MW>} />
         <Route path="/aluno/agendamentos"  element={<MW roles={['ALUNO']}><AgendamentosPage /></MW>} />
         <Route path="/aluno/historico"     element={<MW roles={['ALUNO']}><HistoricoMentorias /></MW>} />
-        <Route path="/aluno/avaliar"       element={<MW roles={['ALUNO']}><AvaliarEncontro /></MW>} />
         <Route path="/aluno/conta"         element={<MW roles={['ALUNO']}><ContaPage /></MW>} />
 
         <Route path="/mentor" element={<MW roles={['ALUNO_MENTOR']}><MentorDashboard /></MW>} />

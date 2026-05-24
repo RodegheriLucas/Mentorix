@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { MxSelect } from '../../components/ui/DesignSystem';
 import api from '../../config/api';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -66,10 +67,14 @@ export const GerenciarAmbientes: React.FC = () => {
           <input style={inputStyle} value={form.bloco} onChange={(e) => setForm((f) => ({ ...f, bloco: e.target.value }))} placeholder="Ex: Bloco B" required />
 
           <label style={{ fontSize: 13, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Tipo</label>
-          <select style={inputStyle} value={form.tipo} onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}>
+          <MxSelect
+            value={form.tipo}
+            onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
+            wrapperStyle={{ marginBottom: 12 }}
+          >
             <option value="SALA_FECHADA">Sala Fechada</option>
             <option value="AMBIENTE_COMUM">Ambiente Comum</option>
-          </select>
+          </MxSelect>
 
           <label style={{ fontSize: 13, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 4 }}>Capacidade</label>
           <input style={inputStyle} type="number" value={form.capacidade} onChange={(e) => setForm((f) => ({ ...f, capacidade: e.target.value }))} placeholder="Ex: 20" />

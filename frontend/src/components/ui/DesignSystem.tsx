@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 // ── MxLogo ────────────────────────────────────────────────────
 export function MxLogo({ size = 22, color = 'var(--primary)' }: { size?: number; color?: string }) {
@@ -103,6 +103,135 @@ export function WhatsAppButton({ phone, name }: { phone: string; name: string })
       </svg>
       Falar com {name.split(' ')[0]}
     </a>
+  );
+}
+
+// ── MxSelect ─────────────────────────────────────────────────
+interface MxSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  wrapperStyle?: React.CSSProperties;
+}
+export function MxSelect({ children, wrapperStyle, style, ...props }: MxSelectProps) {
+  return (
+    <div style={{ position: 'relative', ...wrapperStyle }}>
+      <select
+        {...props}
+        style={{
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          width: '100%',
+          padding: '10px 36px 10px 12px',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 10,
+          color: 'var(--text)',
+          fontFamily: 'var(--f-body)',
+          fontSize: 13,
+          cursor: 'pointer',
+          outline: 'none',
+          ...style,
+        }}
+      >
+        {children}
+      </select>
+      <svg
+        width="14" height="14" viewBox="0 0 24 24" fill="none"
+        style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+      >
+        <path d="M6 9l6 6 6-6" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    </div>
+  );
+}
+
+// ── MxFileInput ───────────────────────────────────────────────
+interface MxFileInputProps {
+  value: File | null;
+  onChange: (f: File | null) => void;
+  accept?: string;
+  label?: string;
+  hint?: string;
+}
+export function MxFileInput({ value, onChange, accept = 'image/*', label = 'Arraste ou clique para selecionar', hint }: MxFileInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [drag, setDrag] = useState(false);
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        style={{ display: 'none' }}
+        onChange={(e) => onChange(e.target.files?.[0] || null)}
+      />
+      {!value ? (
+        <div
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => { e.preventDefault(); setDrag(false); onChange(e.dataTransfer.files?.[0] || null); }}
+          style={{
+            border: `2px dashed ${drag ? 'var(--primary)' : 'var(--border)'}`,
+            borderRadius: 12,
+            background: drag ? 'var(--primary-light)' : 'var(--surface)',
+            padding: '20px 16px',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+            cursor: 'pointer', transition: 'all 0.15s',
+          }}
+        >
+          <div style={{
+            width: 38, height: 38, borderRadius: 10,
+            background: drag ? 'var(--primary)' : 'var(--primary-light)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.15s',
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 15V3M12 3L8 7M12 3l4 4" stroke={drag ? '#fff' : 'var(--primary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4 20h16" stroke={drag ? '#fff' : 'var(--primary)'} strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>
+              {label}
+            </div>
+            {hint && <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>{hint}</div>}
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 12px', borderRadius: 12,
+          border: '1.5px solid var(--primary)', background: 'var(--primary-light)',
+        }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 8, background: 'var(--primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 16, flexShrink: 0,
+          }}>🖼️</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 12,
+              color: 'var(--primary-dark)', whiteSpace: 'nowrap',
+              overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>{value.name}</div>
+            <div style={{ fontSize: 11, color: 'var(--primary)', marginTop: 1 }}>
+              {value.size < 1024 * 1024
+                ? `${(value.size / 1024).toFixed(0)} KB`
+                : `${(value.size / (1024 * 1024)).toFixed(1)} MB`}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => { onChange(null); if (inputRef.current) inputRef.current.value = ''; }}
+            style={{
+              width: 26, height: 26, borderRadius: '50%', border: 'none',
+              background: 'var(--accent-light)', color: 'var(--accent-dark)',
+              cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, lineHeight: 1,
+            }}
+          >×</button>
+        </div>
+      )}
+    </div>
   );
 }
 

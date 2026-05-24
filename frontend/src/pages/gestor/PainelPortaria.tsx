@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import api from '../../config/api';
-import { Avatar } from '../../components/ui/DesignSystem';
+import { Avatar, MxSelect } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { useAuth } from '../../contexts/AuthContext';
@@ -522,19 +522,14 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
               <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 7 }}>
                 Bloco
               </div>
-              <select
+              <MxSelect
                 value={filterBloco}
                 onChange={(e) => setFilterBloco(e.target.value)}
-                style={{
-                  width: '100%', padding: '7px 10px', borderRadius: 9,
-                  border: '1px solid var(--border)', background: 'var(--surface)',
-                  fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--text)',
-                  outline: 'none', cursor: 'pointer',
-                }}
+                style={{ padding: '7px 32px 7px 10px', fontSize: 12, borderRadius: 9 }}
               >
                 <option value="TODOS">Todos os blocos</option>
                 {blocos.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
+              </MxSelect>
             </div>
 
             <div>
