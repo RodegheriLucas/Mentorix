@@ -24,6 +24,8 @@
     "@nestjs/schedule": "^4.1.0",
     "@nestjs/serve-static": "^4.0.2",
     "@nestjs/typeorm": "^10.0.2",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/themes": "^3.3.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
