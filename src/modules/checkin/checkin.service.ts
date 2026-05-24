@@ -70,8 +70,8 @@ export class CheckinService {
     const agendamento = await this.agendamentosService.findById(agendamentoId);
 
     // Calcula duração a partir do horário agendado (hora_fim - hora_inicio)
-    const [hIni, mIni] = agendamento.hora_inicio.split(':').map(Number);
-    const [hFim, mFim] = agendamento.hora_fim.split(':').map(Number);
+    const [hIni, mIni] = agendamento.hora_inicio!.split(':').map(Number);
+    const [hFim, mFim] = agendamento.hora_fim!.split(':').map(Number);
     const duracaoMinutos = (hFim * 60 + mFim) - (hIni * 60 + mIni);
     const duracaoHoras = Math.max(0.01, parseFloat((duracaoMinutos / 60).toFixed(2)));
 

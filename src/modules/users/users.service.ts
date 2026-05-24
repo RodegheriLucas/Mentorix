@@ -75,8 +75,8 @@ export class UsersService {
 
     const sessoes = historicos.map((h) => ({
       data: h.data_encontro,
-      hora_inicio: h.agendamento.hora_inicio,
-      hora_fim: h.agendamento.hora_fim,
+      hora_inicio: h.agendamento.hora_inicio ?? '',
+      hora_fim: h.agendamento.hora_fim ?? '',
       duracao_horas: Number(h.duracao_horas ?? 0),
       card_titulo: h.agendamento.card?.titulo ?? '',
       aluno_nome: h.agendamento.card?.aluno?.nome ?? '',
