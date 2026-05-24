@@ -136,6 +136,10 @@ input, textarea, select {
 .mx-fadeup { animation: mxFadeUp .4s ease both; }
 .animate-fadeIn { animation: mxFadeUp .4s ease both; }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Glass (legacy compat) */
 .glass {
   background: #fff;
