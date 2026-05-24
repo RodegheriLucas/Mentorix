@@ -316,7 +316,16 @@ export const AgendamentosPage: React.FC = () => {
   const nextTitle = isProfessor ? 'Pr\u00f3xima orienta\u00e7\u00e3o' : 'Pr\u00f3xima mentoria';
   const nextItemTitle = isProfessor ? 'Orienta\u00e7\u00e3o' : 'Mentoria';
 
-  const load = () => api.get('/agendamentos').then((r) => setAgendamentos(r.data)).finally(() => setLoading(false));
+  const load = () => api.get('/agendamentos')
+    .then((r) => {
+      const sorted = [...r.data].sort((a: any, b: any) => {
+        const aTcc = a.card?.categoria === 'TCC' ? 0 : 1;
+        const bTcc = b.card?.categoria === 'TCC' ? 0 : 1;
+        return aTcc - bTcc;
+      });
+      setAgendamentos(sorted);
+    })
+    .finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
   const cancelar = async (id: number) => {
