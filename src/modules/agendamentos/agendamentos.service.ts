@@ -119,6 +119,21 @@ export class AgendamentosService {
       .getMany();
   }
 
+  async findFuturosGestor(): Promise<Agendamento[]> {
+    const hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+    return this.agendamentoRepo
+      .createQueryBuilder('a')
+      .leftJoinAndSelect('a.card', 'card')
+      .leftJoinAndSelect('card.aluno', 'aluno')
+      .leftJoinAndSelect('a.mentor', 'mentor')
+      .leftJoinAndSelect('a.ambiente', 'ambiente')
+      .where('a.data > :hoje', { hoje })
+      .orderBy('a.data', 'ASC')
+      .addOrderBy('a.hora_inicio', 'ASC')
+      .getMany();
+  }
+
   async updateStatus(id: number, status: AgendamentoStatus): Promise<void> {
     const agendamento = await this.agendamentoRepo.findOne({ where: { id }, relations: ['card'] });
     await this.agendamentoRepo.update(id, { status });

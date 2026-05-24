@@ -383,7 +383,7 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
     setLoading(true);
     try {
       const [agRes, ambRes] = await Promise.all([
-        api.get('/agendamentos'),
+        api.get('/agendamentos/futuros'),
         api.get('/ambientes'),
       ]);
       setAllAg(agRes.data);
