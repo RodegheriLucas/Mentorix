@@ -74,7 +74,7 @@ export const ContaPage: React.FC = () => {
   const [horasData, setHorasData] = useState<HorasData | null>(null);
   const [loadingHoras, setLoadingHoras] = useState(false);
 
-  const isMentor = user?.papel === 'ALUNO_MENTOR' || user?.papel === 'PROFESSOR_MENTOR';
+  const isMentor = user?.papel === 'ALUNO_MENTOR';
 
   useEffect(() => {
     if (!isMentor) return;
@@ -315,7 +315,7 @@ export const ContaPage: React.FC = () => {
       )}
 
       {/* Competências */}
-      {user.tags_competencia && user.tags_competencia.length > 0 && (
+      {user.papel !== 'PROFESSOR_MENTOR' && user.tags_competencia && user.tags_competencia.length > 0 && (
         <div style={{
           padding: '14px 16px', borderRadius: 14,
           background: '#fff', border: '1px solid var(--border)',
