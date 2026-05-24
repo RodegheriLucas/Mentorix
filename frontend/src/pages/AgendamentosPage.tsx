@@ -290,9 +290,12 @@ export const AgendamentosPage: React.FC = () => {
     }
   };
 
-  const live    = agendamentos.filter((a) => a.status === 'EM_ANDAMENTO');
+  const live      = agendamentos.filter((a) => a.status === 'EM_ANDAMENTO');
   const agendados = agendamentos.filter((a) => ['AGENDADO', 'PENDENTE_GESTOR'].includes(a.status));
-  const hist    = agendamentos.filter((a) => ['CONCLUIDO', 'CANCELADO'].includes(a.status));
+  // Aluno consulta o histórico em /aluno/historico; mentores e gestor ainda veem aqui
+  const hist      = isMentor
+    ? agendamentos.filter((a) => ['CONCLUIDO', 'CANCELADO'].includes(a.status))
+    : [];
 
   const nextSession = live[0] || agendados[0];
 

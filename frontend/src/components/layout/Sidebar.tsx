@@ -24,8 +24,8 @@ const iconFor = (id: string, active: boolean) => {
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 3L3 5v16l6-2 6 2 6-2V3l-6 2-6-2z" stroke={s} strokeWidth={w} strokeLinejoin="round"/><path d="M9 3v16M15 5v16" stroke={s} strokeWidth={w}/></svg>;
   if (id === 'horas')
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke={s} strokeWidth={w}/><path d="M12 7v5l3 2" stroke={s} strokeWidth={w} strokeLinecap="round"/></svg>;
-  if (id === 'avaliar')
-    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" stroke={s} strokeWidth={w} strokeLinejoin="round"/></svg>;
+  if (id === 'historico')
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke={s} strokeWidth={w}/><path d="M12 7v5l3 2" stroke={s} strokeWidth={w} strokeLinecap="round"/></svg>;
   if (id === 'contestacao')
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 22h20L12 2z" stroke={s} strokeWidth={w} fill="none" strokeLinejoin="round"/><path d="M12 9v6M12 18v.5" stroke={s} strokeWidth={w} strokeLinecap="round"/></svg>;
   // default: cards/list
@@ -34,10 +34,10 @@ const iconFor = (id: string, active: boolean) => {
 
 const navItems: Array<NavItem & { iconId: string; }> = [
   // ALUNO
-  { to: '/aluno', label: 'Solicitações', iconId: 'agenda', roles: ['ALUNO'] },
+  { to: '/aluno', label: 'Início', iconId: 'agenda', roles: ['ALUNO'] },
+  { to: '/aluno/agendamentos', label: 'Agenda', iconId: 'agenda', roles: ['ALUNO'] },
+  { to: '/aluno/historico', label: 'Histórico', iconId: 'historico', roles: ['ALUNO'] },
   { to: '/aluno/novo-card', label: 'Nova Solicitação', iconId: 'nova', roles: ['ALUNO'] },
-  { to: '/aluno/agendamentos', label: 'Agendamentos', iconId: 'agenda', roles: ['ALUNO'] },
-  { to: '/aluno/avaliar', label: 'Avaliações', iconId: 'avaliar', roles: ['ALUNO'] },
   // MENTOR
   { to: '/mentor', label: 'Dashboard', iconId: 'portaria', roles: ['ALUNO_MENTOR'] },
   { to: '/mentor/feed', label: 'Descobrir', iconId: 'feed', roles: ['ALUNO_MENTOR'] },

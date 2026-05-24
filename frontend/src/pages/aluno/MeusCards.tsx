@@ -265,7 +265,6 @@ export const MeusCards: React.FC = () => {
   const navigate = useNavigate();
   const [cards, setCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('todas');
 
   const load = () => api.get('/cards/meus').then((r) => setCards(r.data)).finally(() => setLoading(false));
   useEffect(() => { 
@@ -284,25 +283,27 @@ export const MeusCards: React.FC = () => {
     navigate(`/aluno/editar-card/${id}`);
   };
 
-  const filtered = React.useMemo(() => {
-    if (filter === 'mentoria')    return cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status));
-    if (filter === 'matchmaking') return cards.filter((c) => ['ABERTO', 'ACEITO'].includes(c.status));
-    if (filter === 'historico')   return cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status));
-    return cards;
-  }, [cards, filter]);
-
-  const counts = {
-    todas:       cards.length,
-    mentoria:    cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status)).length,
-    matchmaking: cards.filter((c) => ['ABERTO', 'ACEITO'].includes(c.status)).length,
-    historico:   cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status)).length,
-  };
+  const abertos = cards.filter((c) => c.status === 'ABERTO');
 
   return (
     <div className="animate-fadeIn">
       <AlunoHeader nome={user?.nome || 'Usuário'} email={user?.email || ''}/>
 
-      <FilterTabs active={filter} onChange={setFilter} counts={counts}/>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <p className="mx-caption" style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: 0.8,
+          textTransform: 'uppercase', color: 'var(--text-3)',
+        }}>Aguardando mentor · {abertos.length}</p>
+        <Link to="/aluno/novo-card" style={{
+          fontSize: 12, fontWeight: 600, color: 'var(--primary)',
+          textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          Nova solicitação
+        </Link>
+      </div>
 
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -310,7 +311,7 @@ export const MeusCards: React.FC = () => {
         </div>
       )}
 
-      {!loading && filtered.length === 0 && (
+      {!loading && abertos.length === 0 && (
         <div className="mx-card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>
           <div style={{
             width: 52, height: 52, borderRadius: 16, margin: '0 auto 14px',
@@ -322,18 +323,19 @@ export const MeusCards: React.FC = () => {
               <path d="M3 10h18M8 5v5" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
           </div>
-          <p style={{ marginBottom: 16, fontSize: 14, color: 'var(--text-2)' }}>
-            {filter === 'todas' ? 'Nenhuma solicitação criada ainda.' : 'Nada nessa categoria.'}
+          <p style={{ marginBottom: 4, fontSize: 14, color: 'var(--text-2)', fontWeight: 600 }}>
+            Nenhuma solicitação em aberto
           </p>
-          {filter === 'todas' && (
-            <Link to="/aluno/novo-card" className="mx-btn" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 13 }}>
-              Criar primeira solicitação
-            </Link>
-          )}
+          <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 16 }}>
+            Crie uma solicitação e aguarde um mentor compatível.
+          </p>
+          <Link to="/aluno/novo-card" className="mx-btn" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 13 }}>
+            Criar solicitação
+          </Link>
         </div>
       )}
 
-      {!loading && filtered.map((card) => (
+      {!loading && abertos.map((card) => (
         <CardAluno key={card.id} card={card} onCancel={cancelar} onEdit={handleEdit}/>
       ))}
     </div>
