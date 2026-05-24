@@ -13,7 +13,7 @@ import { MeusCards } from '../pages/aluno/MeusCards';
 import { HistoricoMentorias } from '../pages/aluno/HistoricoMentorias';
 
 // Mentor / Professor
-import { MentorDashboard } from '../pages/mentor/MentorDashboard';
+import { MentorHome } from '../pages/mentor/MentorHome';
 import { FeedMentoria } from '../pages/mentor/FeedMentoria';
 import { AbrirContestacao } from '../pages/mentor/AbrirContestacao';
 
@@ -62,13 +62,13 @@ export const AppRouter: React.FC = () => (
         <Route path="/aluno/historico"     element={<MW roles={['ALUNO']}><HistoricoMentorias /></MW>} />
         <Route path="/aluno/conta"         element={<MW roles={['ALUNO']}><ContaPage /></MW>} />
 
-        <Route path="/mentor" element={<MW roles={['ALUNO_MENTOR']}><MentorDashboard /></MW>} />
+        <Route path="/mentor" element={<MW roles={['ALUNO_MENTOR']}><MentorHome /></MW>} />
         <Route path="/mentor/feed" element={<MW roles={['ALUNO_MENTOR']}><FeedMentoria /></MW>} />
         <Route path="/mentor/agendamentos" element={<MW roles={['ALUNO_MENTOR']}><AgendamentosPage /></MW>} />
         <Route path="/mentor/contestacao"  element={<MW roles={['ALUNO_MENTOR']}><AbrirContestacao /></MW>} />
         <Route path="/mentor/conta"        element={<MW roles={['ALUNO_MENTOR']}><ContaPage /></MW>} />
 
-        <Route path="/professor" element={<MW roles={['PROFESSOR_MENTOR']}><MentorDashboard /></MW>} />
+        <Route path="/professor" element={<MW roles={['PROFESSOR_MENTOR']}><MentorHome /></MW>} />
         <Route path="/professor/feed" element={<MW roles={['PROFESSOR_MENTOR']}><FeedMentoria /></MW>} />
         <Route path="/professor/agendamentos" element={<MW roles={['PROFESSOR_MENTOR']}><AgendamentosPage /></MW>} />
         <Route path="/professor/conta" element={<MW roles={['PROFESSOR_MENTOR']}><ContaPage /></MW>} />

@@ -14,6 +14,8 @@ const icn = (id: string, active: boolean) => {
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="3" stroke={c} strokeWidth={w}/><path d="M3 9h18M8 2v4M16 2v4" stroke={c} strokeWidth={w} strokeLinecap="round"/></svg>;
     case 'historico':
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke={c} strokeWidth={w}/><path d="M12 7v5l3 2" stroke={c} strokeWidth={w} strokeLinecap="round"/></svg>;
+    case 'home':
+      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke={c} strokeWidth={w} fill="none" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke={c} strokeWidth={w}/></svg>;
     case 'feed':
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 3L3 5v16l6-2 6 2 6-2V3l-6 2-6-2z" stroke={c} strokeWidth={w} strokeLinejoin="round"/><path d="M9 3v16M15 5v16" stroke={c} strokeWidth={w}/></svg>;
     case 'horas':
@@ -37,6 +39,7 @@ const ALUNO_TABS: TabItem[] = [
 ];
 
 const MENTOR_TABS: TabItem[] = [
+  { to: '/mentor',              label: 'Início',    icon: 'home'     },
   { to: '/mentor/feed',         label: 'Descobrir', icon: 'feed'     },
   { to: '/mentor/agendamentos', label: 'Agenda',    icon: 'agenda'   },
   { to: '/mentor/contestacao',  label: 'Disputa',   icon: 'disputas' },
@@ -44,6 +47,7 @@ const MENTOR_TABS: TabItem[] = [
 ];
 
 const PROFESSOR_TABS: TabItem[] = [
+  { to: '/professor',              label: 'Início',    icon: 'home'   },
   { to: '/professor/feed',         label: 'Descobrir', icon: 'feed'   },
   { to: '/professor/agendamentos', label: 'Agenda',    icon: 'agenda' },
   { to: '/professor/conta',        label: 'Conta',     icon: 'conta'  },
@@ -68,7 +72,7 @@ export const MobileTabBar: React.FC = () => {
   const fabTab   = fabIdx >= 0 ? tabs[fabIdx] : null;
   const fabActive = fabTab ? location.pathname === fabTab.to : false;
 
-  const rootPaths = ['/aluno', '/mentor/feed', '/professor/feed'];
+  const rootPaths = ['/aluno', '/mentor', '/professor'];
 
   return (
     <div style={{
