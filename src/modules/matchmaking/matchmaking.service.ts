@@ -138,7 +138,7 @@ export class MatchmakingService {
       const agendamento = manager.create(Agendamento, {
         card_id: cardId,
         mentor_id: professorId,
-        status: AgendamentoStatus.PENDENTE_GESTOR,
+        status: AgendamentoStatus.AGENDADO,
       });
 
       const saved = await manager.save(agendamento);

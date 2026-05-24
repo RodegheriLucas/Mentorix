@@ -18,6 +18,9 @@ import { FeedMentoria } from '../pages/mentor/FeedMentoria';
 import { ProfessorHistorico } from '../pages/professor/ProfessorHistorico';
 import { AbrirContestacao } from '../pages/mentor/AbrirContestacao';
 
+// Detalhe orientação
+import { OrientacaoDetalhe } from '../pages/OrientacaoDetalhe';
+
 // Gestor
 import { PainelPortaria } from '../pages/gestor/PainelPortaria';
 import { GerenciarAmbientes } from '../pages/gestor/GerenciarAmbientes';
@@ -61,6 +64,7 @@ export const AppRouter: React.FC = () => (
         <Route path="/aluno/editar-card/:id" element={<MW roles={['ALUNO']}><NovoCard /></MW>} />
         <Route path="/aluno/agendamentos"  element={<MW roles={['ALUNO']}><AgendamentosPage /></MW>} />
         <Route path="/aluno/historico"     element={<MW roles={['ALUNO']}><HistoricoMentorias /></MW>} />
+        <Route path="/aluno/orientacao/:id" element={<MW roles={['ALUNO']}><OrientacaoDetalhe /></MW>} />
         <Route path="/aluno/conta"         element={<MW roles={['ALUNO']}><ContaPage /></MW>} />
 
         <Route path="/mentor" element={<MW roles={['ALUNO_MENTOR']}><MentorHome /></MW>} />
@@ -73,6 +77,7 @@ export const AppRouter: React.FC = () => (
         <Route path="/professor/feed" element={<MW roles={['PROFESSOR_MENTOR']}><FeedMentoria /></MW>} />
         <Route path="/professor/agendamentos" element={<MW roles={['PROFESSOR_MENTOR']}><AgendamentosPage /></MW>} />
         <Route path="/professor/historico" element={<MW roles={['PROFESSOR_MENTOR']}><ProfessorHistorico /></MW>} />
+        <Route path="/professor/orientacao/:id" element={<MW roles={['PROFESSOR_MENTOR']}><OrientacaoDetalhe /></MW>} />
         <Route path="/professor/conta" element={<MW roles={['PROFESSOR_MENTOR']}><ContaPage /></MW>} />
 
         <Route path="/gestor" element={<Navigate to="/gestor/portaria" replace />} />

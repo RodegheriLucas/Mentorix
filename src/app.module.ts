@@ -17,6 +17,7 @@ import { AvaliacoesModule } from './modules/avaliacoes/avaliacoes.module';
 import { DisputesModule } from './modules/disputes/disputes.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { ContraPropostasModule } from './modules/contra-propostas/contra-propostas.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { PenaltyCheckerCron } from './tasks/penalty-checker.cron';
 
 @Module({
@@ -39,6 +40,7 @@ import { PenaltyCheckerCron } from './tasks/penalty-checker.cron';
     DisputesModule,
     AuditModule,
     ContraPropostasModule,
+    ChatModule,
   ],
   providers: [PenaltyCheckerCron],
 })

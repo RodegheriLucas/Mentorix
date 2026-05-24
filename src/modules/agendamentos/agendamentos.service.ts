@@ -134,6 +134,17 @@ export class AgendamentosService {
       .getMany();
   }
 
+  async encerrar(id: number, professorId: number): Promise<Agendamento> {
+    const a = await this.findById(id);
+    if (a.mentor_id !== professorId) throw new ForbiddenException();
+    if (![AgendamentoStatus.AGENDADO, AgendamentoStatus.EM_ANDAMENTO].includes(a.status)) {
+      throw new BadRequestException('Orientação não pode ser encerrada neste status.');
+    }
+    await this.agendamentoRepo.update(id, { status: AgendamentoStatus.CONCLUIDO });
+    if (a.card_id) await this.cardRepo.update(a.card_id, { status: CardStatus.CONCLUIDO });
+    return this.findById(id);
+  }
+
   async updateStatus(id: number, status: AgendamentoStatus): Promise<void> {
     const agendamento = await this.agendamentoRepo.findOne({ where: { id }, relations: ['card'] });
     await this.agendamentoRepo.update(id, { status });

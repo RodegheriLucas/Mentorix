@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
 import { StatusPill, Avatar, CheckInOutCard, WhatsAppButton } from '../components/ui/DesignSystem';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -181,7 +182,7 @@ function CalendarView({ items }: { items: any[] }) {
 }
 
 // ── List item ─────────────────────────────────────────────────
-function AgItem({ ag, onCancel, isMentor, isProfessor }: { ag: any; onCancel: (id: number) => void; isMentor: boolean; isProfessor: boolean }) {
+function AgItem({ ag, onCancel, isMentor, isProfessor, onVerDetalhes }: { ag: any; onCancel: (id: number) => void; isMentor: boolean; isProfessor: boolean; onVerDetalhes: (id: number) => void }) {
   const isLive = ag.status === 'EM_ANDAMENTO';
   const isAg   = ag.status === 'AGENDADO';
   const isDone = ag.status === 'CONCLUIDO';
@@ -257,9 +258,33 @@ function AgItem({ ag, onCancel, isMentor, isProfessor }: { ag: any; onCancel: (i
             </div>
           )}
 
-          {['PENDENTE_GESTOR', 'AGENDADO'].includes(ag.status) && (
+          {ag.card?.categoria === 'TCC' && !['CANCELADO'].includes(ag.status) && (
+            <button onClick={() => onVerDetalhes(ag.id)} style={{
+              marginTop: 10, padding: '8px 14px', borderRadius: 10,
+              border: '1.5px solid var(--primary)', background: 'var(--primary-light)', cursor: 'pointer',
+              fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--primary-dark)', fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+              </svg>
+              Ver detalhes e chat
+            </button>
+          )}
+
+          {['PENDENTE_GESTOR', 'AGENDADO'].includes(ag.status) && ag.card?.categoria !== 'TCC' && (
             <button onClick={() => onCancel(ag.id)} style={{
               marginTop: 10, padding: '8px 14px', borderRadius: 10,
+              border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
+              fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--accent)',
+            }}>
+              Cancelar
+            </button>
+          )}
+
+          {['PENDENTE_GESTOR', 'AGENDADO'].includes(ag.status) && ag.card?.categoria === 'TCC' && (
+            <button onClick={() => onCancel(ag.id)} style={{
+              marginTop: 6, padding: '8px 14px', borderRadius: 10,
               border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
               fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--accent)',
             }}>
@@ -275,6 +300,7 @@ function AgItem({ ag, onCancel, isMentor, isProfessor }: { ag: any; onCancel: (i
 // ── Main page ─────────────────────────────────────────────────
 export const AgendamentosPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('lista');
@@ -299,6 +325,11 @@ export const AgendamentosPage: React.FC = () => {
     } catch (err: any) {
       alert(err.response?.data?.message || 'Erro ao cancelar.');
     }
+  };
+
+  const verDetalhes = (id: number) => {
+    const prefix = isProfessor ? '/professor' : '/aluno';
+    navigate(`${prefix}/orientacao/${id}`);
   };
 
   const live      = agendamentos.filter((a) => a.status === 'EM_ANDAMENTO');
@@ -380,7 +411,7 @@ export const AgendamentosPage: React.FC = () => {
                   <p className="mx-caption" style={{ padding: '0 0 6px', fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--text-3)' }}>
                     Em andamento · {live.length}
                   </p>
-                  {live.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>)}
+                  {live.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor} onVerDetalhes={verDetalhes}/>)}
                 </div>
               )}
 
@@ -389,7 +420,7 @@ export const AgendamentosPage: React.FC = () => {
                   <p className="mx-caption" style={{ padding: '0 0 6px', fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--text-3)' }}>
                     Agendado · {agendados.length}
                   </p>
-                  {agendados.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>)}
+                  {agendados.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor} onVerDetalhes={verDetalhes}/>)}
                 </div>
               )}
 
@@ -398,7 +429,7 @@ export const AgendamentosPage: React.FC = () => {
                   <p className="mx-caption" style={{ padding: '0 0 6px', fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--text-3)' }}>
                     {'Hist\u00f3rico \u00b7 '}{hist.length}
                   </p>
-                  {hist.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>)}
+                  {hist.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor} onVerDetalhes={verDetalhes}/>)}
                 </div>
               )}
 
@@ -427,7 +458,7 @@ export const AgendamentosPage: React.FC = () => {
                   {canceladosOpen && (
                     <div style={{ marginTop: 6 }}>
                       {cancelados.map((ag) => (
-                        <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>
+                        <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor} onVerDetalhes={verDetalhes}/>
                       ))}
                     </div>
                   )}

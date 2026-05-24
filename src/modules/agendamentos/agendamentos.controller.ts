@@ -58,4 +58,11 @@ export class AgendamentosController {
   cancelar(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
     return this.agendamentosService.cancelar(id, user.id, user.papel);
   }
+
+  @Patch(':id/encerrar')
+  @UseGuards(RolesGuard)
+  @Roles(Role.PROFESSOR_MENTOR)
+  encerrar(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    return this.agendamentosService.encerrar(id, user.id);
+  }
 }
