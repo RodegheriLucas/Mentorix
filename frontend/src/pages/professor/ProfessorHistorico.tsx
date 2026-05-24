@@ -134,7 +134,6 @@ export const ProfessorHistorico: React.FC = () => {
               <div key={ag.id} style={{
                 background: '#fff', border: '1px solid var(--border)',
                 borderRadius: 14, padding: '14px 16px',
-                borderLeft: '4px solid #7bb87b',
               }}>
                 {/* Título + badge */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
