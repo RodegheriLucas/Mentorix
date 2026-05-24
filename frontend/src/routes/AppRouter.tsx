@@ -12,7 +12,8 @@ import { NovoCard } from '../pages/aluno/NovoCard';
 import { MeusCards } from '../pages/aluno/MeusCards';
 import { AvaliarEncontro } from '../pages/aluno/AvaliarEncontro';
 
-// Mentor
+// Mentor / Professor
+import { MentorDashboard } from '../pages/mentor/MentorDashboard';
 import { FeedMentoria } from '../pages/mentor/FeedMentoria';
 import { MinhasHoras } from '../pages/mentor/MinhasHoras';
 import { AbrirContestacao } from '../pages/mentor/AbrirContestacao';
@@ -23,18 +24,20 @@ import { GerenciarAmbientes } from '../pages/gestor/GerenciarAmbientes';
 import { ResolverDisputas } from '../pages/gestor/ResolverDisputas';
 
 const AgendamentosPage = React.lazy(() =>
-  import('../pages/AgendamentosPage').then(m => ({ default: m.AgendamentosPage }))
+  import('../pages/AgendamentosPage').then((m) => ({ default: m.AgendamentosPage })),
 );
 
 const RoleRedirect: React.FC = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
+
   const routes: Record<string, string> = {
     ALUNO: '/aluno',
-    ALUNO_MENTOR: '/mentor/agendamentos',
-    PROFESSOR_MENTOR: '/professor/agendamentos',
-    GESTOR: '/gestor/portaria',
+    ALUNO_MENTOR: '/mentor',
+    PROFESSOR_MENTOR: '/professor',
+    GESTOR: '/gestor',
   };
+
   return <Navigate to={routes[user.papel] || '/login'} replace />;
 };
 
@@ -52,34 +55,30 @@ export const AppRouter: React.FC = () => (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 
-        {/* ALUNO */}
-        <Route path="/aluno"               element={<MW roles={['ALUNO']}><MeusCards /></MW>} />
-        <Route path="/aluno/meus-cards"    element={<MW roles={['ALUNO']}><MeusCards /></MW>} />
-        <Route path="/aluno/novo-card"     element={<MW roles={['ALUNO']}><NovoCard /></MW>} />
+        <Route path="/aluno" element={<MW roles={['ALUNO']}><MeusCards /></MW>} />
+        <Route path="/aluno/meus-cards" element={<MW roles={['ALUNO']}><MeusCards /></MW>} />
+        <Route path="/aluno/novo-card" element={<MW roles={['ALUNO']}><NovoCard /></MW>} />
         <Route path="/aluno/editar-card/:id" element={<MW roles={['ALUNO']}><NovoCard /></MW>} />
-        <Route path="/aluno/agendamentos"  element={<MW roles={['ALUNO']}><AgendamentosPage /></MW>} />
-        <Route path="/aluno/avaliar"       element={<MW roles={['ALUNO']}><AvaliarEncontro /></MW>} />
-        <Route path="/aluno/conta"         element={<MW roles={['ALUNO']}><ContaPage /></MW>} />
+        <Route path="/aluno/agendamentos" element={<MW roles={['ALUNO']}><AgendamentosPage /></MW>} />
+        <Route path="/aluno/avaliar" element={<MW roles={['ALUNO']}><AvaliarEncontro /></MW>} />
+        <Route path="/aluno/conta" element={<MW roles={['ALUNO']}><ContaPage /></MW>} />
 
-        {/* MENTOR — landing redirects to agenda */}
-        <Route path="/mentor"              element={<Navigate to="/mentor/agendamentos" replace />} />
-        <Route path="/mentor/feed"         element={<MW roles={['ALUNO_MENTOR']}><FeedMentoria /></MW>} />
+        <Route path="/mentor" element={<MW roles={['ALUNO_MENTOR']}><MentorDashboard /></MW>} />
+        <Route path="/mentor/feed" element={<MW roles={['ALUNO_MENTOR']}><FeedMentoria /></MW>} />
         <Route path="/mentor/agendamentos" element={<MW roles={['ALUNO_MENTOR']}><AgendamentosPage /></MW>} />
-        <Route path="/mentor/horas"        element={<MW roles={['ALUNO_MENTOR']}><MinhasHoras /></MW>} />
-        <Route path="/mentor/contestacao"  element={<MW roles={['ALUNO_MENTOR']}><AbrirContestacao /></MW>} />
-        <Route path="/mentor/conta"        element={<MW roles={['ALUNO_MENTOR']}><ContaPage /></MW>} />
+        <Route path="/mentor/horas" element={<MW roles={['ALUNO_MENTOR']}><MinhasHoras /></MW>} />
+        <Route path="/mentor/contestacao" element={<MW roles={['ALUNO_MENTOR']}><AbrirContestacao /></MW>} />
+        <Route path="/mentor/conta" element={<MW roles={['ALUNO_MENTOR']}><ContaPage /></MW>} />
 
-        {/* PROFESSOR — landing redirects to agenda */}
-        <Route path="/professor"              element={<Navigate to="/professor/agendamentos" replace />} />
-        <Route path="/professor/feed"         element={<MW roles={['PROFESSOR_MENTOR']}><FeedMentoria /></MW>} />
+        <Route path="/professor" element={<MW roles={['PROFESSOR_MENTOR']}><MentorDashboard /></MW>} />
+        <Route path="/professor/feed" element={<MW roles={['PROFESSOR_MENTOR']}><FeedMentoria /></MW>} />
         <Route path="/professor/agendamentos" element={<MW roles={['PROFESSOR_MENTOR']}><AgendamentosPage /></MW>} />
-        <Route path="/professor/conta"        element={<MW roles={['PROFESSOR_MENTOR']}><ContaPage /></MW>} />
+        <Route path="/professor/conta" element={<MW roles={['PROFESSOR_MENTOR']}><ContaPage /></MW>} />
 
-        {/* GESTOR */}
-        <Route path="/gestor"           element={<Navigate to="/gestor/portaria" replace />} />
-        <Route path="/gestor/portaria"  element={<GW><PainelPortaria /></GW>} />
+        <Route path="/gestor" element={<GW><GestorDashboard /></GW>} />
+        <Route path="/gestor/portaria" element={<GW><PainelPortaria /></GW>} />
         <Route path="/gestor/ambientes" element={<GW><GerenciarAmbientes /></GW>} />
-        <Route path="/gestor/disputas"  element={<GW><ResolverDisputas /></GW>} />
+        <Route path="/gestor/disputas" element={<GW><ResolverDisputas /></GW>} />
 
         <Route path="/" element={<RoleRedirect />} />
         <Route path="*" element={<Navigate to="/" replace />} />

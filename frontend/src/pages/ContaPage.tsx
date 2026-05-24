@@ -26,7 +26,7 @@ function initials(nome: string) {
 const ROLE_PT: Record<string, string> = {
   ALUNO: 'Aluno',
   ALUNO_MENTOR: 'Mentor',
-  PROFESSOR_MENTOR: 'Professor Mentor',
+  PROFESSOR_MENTOR: 'Orientador',
   GESTOR: 'Gestor',
 };
 
@@ -123,7 +123,7 @@ export const ContaPage: React.FC = () => {
             <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 22, color: 'var(--secondary)', letterSpacing: -0.5 }}>
               {Number(user.horas_complementares || 0).toFixed(1)}h
             </div>
-            <div className="mx-caption" style={{ fontSize: 11, marginTop: 2 }}>Horas acumuladas</div>
+            <div className="mx-caption" style={{ fontSize: 11, marginTop: 2 }}>{'Compet\u00eancias'}</div>
           </div>
           <div style={{
             flex: 1, padding: '14px 16px', borderRadius: 14,
@@ -132,12 +132,12 @@ export const ContaPage: React.FC = () => {
             <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 22, color: 'var(--primary)', letterSpacing: -0.5 }}>
               {user.tags_competencia?.length ?? 0}
             </div>
-            <div className="mx-caption" style={{ fontSize: 11, marginTop: 2 }}>Competências</div>
+            <div className="mx-caption" style={{ fontSize: 11, marginTop: 2 }}>{'Compet\u00eancias'}</div>
           </div>
         </div>
       )}
 
-      {/* Competências */}
+      {/* Compet\u00eancias */}
       {user.tags_competencia && user.tags_competencia.length > 0 && (
         <div style={{
           padding: '14px 16px', borderRadius: 14,
@@ -200,7 +200,7 @@ export const ContaPage: React.FC = () => {
 
       <div style={{ height: 8 }}/>
       <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--f-body)' }}>
-        mentorix · acesso restrito à instituição
+        {'mentorix \u00b7 acesso restrito \u00e0 institui\u00e7\u00e3o'}
       </p>
     </div>
   );

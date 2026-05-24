@@ -1,5 +1,6 @@
 import {
-  IsArray, IsEnum, IsNotEmpty, IsString, IsDateString, MaxLength, ValidateNested,
+  IsArray, IsEnum, IsNotEmpty, IsString, IsDateString,
+  IsNumber, IsOptional, MaxLength, ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CardCategoria } from '../../../common/types/status.enum';
@@ -36,4 +37,9 @@ export class CreateCardDto {
   @ValidateNested({ each: true })
   @Type(() => DisponibilidadeDto)
   disponibilidades: DisponibilidadeDto[];
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  professores_preferidos?: number[];
 }

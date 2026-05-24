@@ -5,15 +5,15 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 
 function initials(name: string) {
-  return name?.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase() || '??';
+  return name?.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase() || '?';
 }
 
 // ── View toggle ───────────────────────────────────────────────
 function ViewToggle({ view, onChange }: { view: string; onChange: (v: string) => void }) {
   return (
     <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: 'var(--surface)', width: 'fit-content', marginBottom: 20 }}>
-      {['Lista', 'Calendário'].map((label) => {
-        const id = label.toLowerCase().replace('á', 'a');
+      {['Lista', 'Calend\u00e1rio'].map((label) => {
+        const id = label.toLowerCase().replace('\u00e1', 'a');
         const a = view === id;
         return (
           <button key={id} onClick={() => onChange(id)} style={{
@@ -115,7 +115,7 @@ function CalendarView({ items }: { items: any[] }) {
             const endH   = parseInt(ag.hora_fim?.split(':')[0] ?? '9', 10);
             const dur = Math.max(1, endH - startH);
             const startRow = startH - 8;
-            const title = ag.card?.titulo || ag.mentor?.nome || 'Mentoria';
+            const title = ag.card?.titulo || 'Orientação';
             const init  = initials(ag.card?.aluno?.nome || ag.mentor?.nome || '?');
 
             return (
@@ -177,20 +177,20 @@ function CalendarView({ items }: { items: any[] }) {
 }
 
 // ── List item ─────────────────────────────────────────────────
-function AgItem({ ag, onCancel, isMentor }: { ag: any; onCancel: (id: number) => void; isMentor: boolean }) {
+function AgItem({ ag, onCancel, isMentor, isProfessor }: { ag: any; onCancel: (id: number) => void; isMentor: boolean; isProfessor: boolean }) {
   const isLive = ag.status === 'EM_ANDAMENTO';
   const isAg   = ag.status === 'AGENDADO';
   const isDone = ag.status === 'CONCLUIDO';
 
-  const title = ag.card?.titulo || 'Mentoria';
+  const title = ag.card?.titulo || ('Orienta\u00e7\u00e3o');
   const otherPerson = isMentor ? ag.card?.aluno : ag.mentor;
   const otherName   = otherPerson?.nome || '—';
-  const role        = isMentor ? 'Aluno' : (otherPerson?.papel === 'PROFESSOR_MENTOR' ? 'Professor' : 'Mentor');
+  const role        = isMentor ? 'Aluno' : (otherPerson?.papel === 'PROFESSOR_MENTOR' ? 'Orientador' : 'Mentor');
 
   const checkinData = {
     status: ag.status,
     sala: ag.ambiente?.nome,
-    when: `${formatData(ag.data)} · ${ag.hora_inicio?.slice(0,5)}–${ag.hora_fim?.slice(0,5)}`,
+    when: `${formatData(ag.data)} \u00b7 ${ag.hora_inicio?.slice(0,5)}\u2013${ag.hora_fim?.slice(0,5)}`,
     duracao: ag.duracao_horas ? `${ag.duracao_horas}h` : undefined,
     checkinAt: ag.checkin_em ? ag.hora_inicio?.slice(0,5) : undefined,
     checkoutAt: ag.checkout_em ? ag.hora_fim?.slice(0,5) : undefined,
@@ -229,7 +229,7 @@ function AgItem({ ag, onCancel, isMentor }: { ag: any; onCancel: (id: number) =>
                 <circle cx="12" cy="12" r="9" stroke="#E0A800" strokeWidth="2"/>
                 <path d="M12 7v5l3 2" stroke="#E0A800" strokeWidth="2" strokeLinecap="round"/>
               </svg>
-              Aguardando gestor enviar instruções de sala.
+              {'Aguardando gestor enviar instru\u00e7\u00f5es de sala.'}
             </div>
           )}
 
@@ -277,6 +277,12 @@ export const AgendamentosPage: React.FC = () => {
   const [view, setView] = useState('lista');
 
   const isMentor = ['ALUNO_MENTOR', 'PROFESSOR_MENTOR'].includes(user?.papel ?? '');
+  const isProfessor = user?.papel === 'PROFESSOR_MENTOR';
+  const pageLabel = isProfessor ? 'Orientador' : isMentor ? 'Mentor' : 'Aluno';
+  const pageSection = isProfessor ? 'Orienta\u00e7\u00f5es' : 'Mentorias';
+  const pageTitle = isProfessor ? 'Suas orienta\u00e7\u00f5es' : 'Suas mentorias';
+  const nextTitle = isProfessor ? 'Pr\u00f3xima orienta\u00e7\u00e3o' : 'Pr\u00f3xima mentoria';
+  const nextItemTitle = isProfessor ? 'Orienta\u00e7\u00e3o' : 'Mentoria';
 
   const load = () => api.get('/agendamentos').then((r) => setAgendamentos(r.data)).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
@@ -304,8 +310,8 @@ export const AgendamentosPage: React.FC = () => {
         <p className="mx-caption" style={{
           fontSize: 10, fontWeight: 700, letterSpacing: 1,
           textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 4,
-        }}>{isMentor ? 'Mentor' : 'Aluno'} · Mentorias</p>
-        <h1 className="mx-h1" style={{ fontSize: 26 }}>Suas mentorias</h1>
+        }}>{pageLabel + ' \u00b7 ' + pageSection}</p>
+        <h1 className="mx-h1" style={{ fontSize: 26 }}>{pageTitle}</h1>
         <p className="mx-caption" style={{ marginTop: 4 }}>
           {agendamentos.filter((a) => !['CONCLUIDO', 'CANCELADO'].includes(a.status)).length} ativa(s) esta semana
         </p>
@@ -337,11 +343,9 @@ export const AgendamentosPage: React.FC = () => {
                 </svg>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: 'var(--accent-dark)', marginBottom: 2 }}>
-                  Próxima mentoria
-                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: 'var(--accent-dark)', marginBottom: 2 }}>{nextTitle}</div>
                 <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
-                  {nextSession.card?.titulo || 'Mentoria'} · {formatData(nextSession.data)} {nextSession.hora_inicio?.slice(0,5)}
+                  {nextSession.card?.titulo || nextItemTitle} {'\u00b7'} {formatData(nextSession.data)} {nextSession.hora_inicio?.slice(0,5)}
                 </div>
               </div>
             </div>
@@ -365,7 +369,7 @@ export const AgendamentosPage: React.FC = () => {
                   <p className="mx-caption" style={{ padding: '0 0 6px', fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--text-3)' }}>
                     Em andamento · {live.length}
                   </p>
-                  {live.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor}/>)}
+                  {live.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>)}
                 </div>
               )}
 
@@ -374,16 +378,16 @@ export const AgendamentosPage: React.FC = () => {
                   <p className="mx-caption" style={{ padding: '0 0 6px', fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--text-3)' }}>
                     Agendado · {agendados.length}
                   </p>
-                  {agendados.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor}/>)}
+                  {agendados.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>)}
                 </div>
               )}
 
               {hist.length > 0 && (
                 <div>
                   <p className="mx-caption" style={{ padding: '0 0 6px', fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--text-3)' }}>
-                    Histórico · {hist.length}
+                    {'Hist\u00f3rico \u00b7 '}{hist.length}
                   </p>
-                  {hist.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor}/>)}
+                  {hist.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>)}
                 </div>
               )}
             </>

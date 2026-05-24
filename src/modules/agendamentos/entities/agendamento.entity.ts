@@ -26,21 +26,21 @@ export class Agendamento {
   @JoinColumn({ name: 'mentor_id' })
   mentor: User;
 
-  @Column({ name: 'ambiente_id', unsigned: true })
-  ambiente_id: number;
+  @Column({ name: 'ambiente_id', unsigned: true, nullable: true })
+  ambiente_id: number | null;
 
-  @ManyToOne(() => Ambiente)
+  @ManyToOne(() => Ambiente, { nullable: true })
   @JoinColumn({ name: 'ambiente_id' })
-  ambiente: Ambiente;
+  ambiente: Ambiente | null;
 
-  @Column({ name: 'data', type: 'date' })
-  data: string;
+  @Column({ name: 'data', type: 'date', nullable: true })
+  data: string | null;
 
-  @Column({ name: 'hora_inicio', type: 'time' })
-  hora_inicio: string;
+  @Column({ name: 'hora_inicio', type: 'time', nullable: true })
+  hora_inicio: string | null;
 
-  @Column({ name: 'hora_fim', type: 'time' })
-  hora_fim: string;
+  @Column({ name: 'hora_fim', type: 'time', nullable: true })
+  hora_fim: string | null;
 
   @Column({ name: 'instrucoes_gestor', type: 'text', nullable: true })
   instrucoes_gestor: string;

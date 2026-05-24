@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { Role } from '../../common/types/roles.enum';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +23,14 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.userRepo.find({ where: { ativo: 1 }, select: ['id', 'nome', 'email', 'papel', 'tags_competencia', 'horas_complementares', 'avatar_url'] });
+  }
+
+  async findActiveByRole(role?: Role): Promise<Partial<User>[]> {
+    return this.userRepo.find({
+      where: role ? { ativo: 1, papel: role } : { ativo: 1 },
+      select: ['id', 'nome', 'email', 'papel', 'tags_competencia', 'horas_complementares', 'avatar_url'],
+      order: { nome: 'ASC' },
+    });
   }
 
   async updateSuspension(userId: number, suspendedUntil: Date | null): Promise<void> {

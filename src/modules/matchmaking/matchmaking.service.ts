@@ -124,4 +124,33 @@ export class MatchmakingService {
       }) as Promise<Agendamento>;
     });
   }
+
+  async confirmMatchTcc(cardId: number, professorId: number, ip?: string): Promise<Agendamento> {
+    const card = await this.cardsService.findById(cardId);
+    if (card.status !== CardStatus.ABERTO) throw new BadRequestException('Card não está mais disponível.');
+
+    const isPreferido = card.preferencias?.some((p) => p.professor_id === professorId);
+    if (card.preferencias?.length > 0 && !isPreferido) {
+      throw new BadRequestException('Você não está na lista de preferências deste card TCC.');
+    }
+
+    return this.dataSource.transaction(async (manager) => {
+      const agendamento = manager.create(Agendamento, {
+        card_id: cardId,
+        mentor_id: professorId,
+        status: AgendamentoStatus.PENDENTE_GESTOR,
+      });
+
+      const saved = await manager.save(agendamento);
+      await manager.update(Card, { id: cardId }, { status: CardStatus.ACEITO });
+
+      await this.auditService.log(professorId, 'CARD_TCC_ACEITO', 'agendamentos', saved.id, null,
+        { card_id: cardId, professor_id: professorId }, ip);
+
+      return manager.findOne(Agendamento, {
+        where: { id: saved.id },
+        relations: ['card', 'mentor'],
+      }) as Promise<Agendamento>;
+    });
+  }
 }

@@ -95,7 +95,118 @@ function FilterTabs({ active, onChange, counts }: {
   );
 }
 
-function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: number) => void; onEdit: (id: number) => void }) {
+// ─── Propostas recebidas (TCC sem preferência) ────────────────────────────────
+function PropostasSection({ card, propostas, onAceitar, onRecusar }: {
+  card: any;
+  propostas: any[];
+  onAceitar: (propostaId: number) => void;
+  onRecusar: (propostaId: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  if (propostas.length === 0) return (
+    <div style={{ padding: '8px 12px', borderRadius: 10, background: 'var(--primary-light)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', display: 'inline-block', animation: 'mxPulse 1.5s ease-in-out infinite' }}/>
+      <span style={{ fontSize: 12, color: 'var(--primary-dark)' }}>Aguardando propostas de professores…</span>
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop: 8, borderRadius: 12, border: '1.5px solid var(--primary)', overflow: 'hidden' }}>
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        style={{
+          width: '100%', textAlign: 'left', padding: '10px 12px',
+          background: 'var(--primary)', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
+          </svg>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>
+            {propostas.length} professor{propostas.length > 1 ? 'es' : ''} interessado{propostas.length > 1 ? 's' : ''} no seu TCC
+          </span>
+        </div>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>
+          <path d="M6 9l6 6 6-6" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+        </svg>
+      </button>
+
+      {expanded && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {propostas.map((proposta, i) => {
+            const prof = proposta.professor || {};
+            const ini = prof.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '??';
+            return (
+              <div key={proposta.id} style={{
+                padding: '12px 12px',
+                borderTop: i > 0 ? '1px solid var(--border)' : 'none',
+                background: '#fff',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: proposta.mensagem ? 8 : 10 }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                    background: 'linear-gradient(135deg,#6f5ad0,#4632a0)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 12, fontWeight: 700, color: '#fff',
+                  }}>{ini}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{prof.nome || '—'}</div>
+                    <div className="mx-caption" style={{ fontSize: 11 }}>Professor Mentor</div>
+                  </div>
+                </div>
+                {proposta.mensagem && (
+                  <div style={{
+                    padding: '8px 10px', borderRadius: 10,
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                    fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5, marginBottom: 10,
+                    fontStyle: 'italic',
+                  }}>
+                    "{proposta.mensagem}"
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => onAceitar(proposta.id)}
+                    style={{
+                      flex: 1, padding: '9px 0', borderRadius: 10, border: 0, cursor: 'pointer',
+                      background: 'linear-gradient(135deg, var(--secondary), var(--secondary-dark))',
+                      color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 12,
+                      boxShadow: '0 2px 8px rgba(46,125,50,0.25)',
+                    }}
+                  >
+                    Aceitar proposta
+                  </button>
+                  <button
+                    onClick={() => onRecusar(proposta.id)}
+                    style={{
+                      padding: '9px 14px', borderRadius: 10, cursor: 'pointer',
+                      border: '1px solid var(--border)', background: '#fff',
+                      fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--accent)',
+                    }}
+                  >
+                    Recusar
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CardAluno({ card, onCancel, onEdit, propostas, onAceitarProposta, onRecusarProposta }: {
+  card: any;
+  onCancel: (id: number) => void;
+  onEdit: (card: any) => void;
+  propostas?: any[];
+  onAceitarProposta?: (propostaId: number) => void;
+  onRecusarProposta?: (propostaId: number) => void;
+}) {
   const isLive = card.status === 'EM_ANDAMENTO';
   const isAg   = card.status === 'AGENDADO';
   const isDone = card.status === 'CONCLUIDO';
@@ -210,8 +321,8 @@ function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: numbe
             </div>
           )}
 
-          {/* Aberto / matchmaking */}
-          {card.status === 'ABERTO' && (
+          {/* Aberto / matchmaking — GERAL */}
+          {card.status === 'ABERTO' && card.categoria !== 'TCC' && (
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '8px 12px', borderRadius: 10, background: 'var(--primary-light)',
@@ -220,6 +331,42 @@ function CardAluno({ card, onCancel, onEdit }: { card: any; onCancel: (id: numbe
                 Aguardando mentor compatível…
               </span>
               <span className="mx-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)', display: 'inline-block' }}/>
+            </div>
+          )}
+
+          {/* TCC — propostas de professores */}
+          {card.status === 'ABERTO' && card.categoria === 'TCC' && (card.preferencias || []).length === 0 && propostas !== undefined && onAceitarProposta && onRecusarProposta && (
+            <PropostasSection
+              card={card}
+              propostas={propostas}
+              onAceitar={onAceitarProposta}
+              onRecusar={onRecusarProposta}
+            />
+          )}
+
+          {/* TCC com professores preferidos — aguardando aceite deles */}
+          {card.status === 'ABERTO' && card.categoria === 'TCC' && (card.preferencias || []).length > 0 && (
+            <div style={{ padding: '8px 12px', borderRadius: 10, background: 'var(--primary-light)', marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: 'var(--primary-dark)', marginBottom: 6 }}>
+                Aguardando aceite dos professores indicados:
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {card.preferencias.map((pref: any) => {
+                  const prof = pref.professor || {};
+                  const ini = prof.nome?.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() || '??';
+                  return (
+                    <div key={pref.id} style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '4px 10px 4px 6px', borderRadius: 999,
+                      background: 'var(--primary)', color: '#fff',
+                      fontSize: 11, fontWeight: 500,
+                    }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700 }}>{ini}</div>
+                      {prof.nome?.split(' ')[0] || 'Professor'}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -271,9 +418,48 @@ export const MeusCards: React.FC = () => {
   const [cards, setCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todas');
+  // const [edit, setEdit] = useState<EditState | null>(null);
+  const [propostasMap, setPropostasMap] = useState<Record<number, any[]>>({});
 
-  const load = () => api.get('/cards/meus').then((r) => setCards(r.data)).finally(() => setLoading(false));
+  const today = new Date().toISOString().split('T')[0];
+
+  const fetchPropostas = async (cardList: any[]) => {
+    const tccAbertosSemPref = cardList.filter(
+      (c) => c.categoria === 'TCC' && c.status === 'ABERTO' && (c.preferencias || []).length === 0
+    );
+    const entries = await Promise.all(
+      tccAbertosSemPref.map((c) =>
+        api.get(`/contra-propostas/card/${c.id}`)
+          .then((r) => [c.id, r.data] as [number, any[]])
+          .catch(() => [c.id, []] as [number, any[]])
+      )
+    );
+    setPropostasMap(Object.fromEntries(entries));
+  };
+
+  const load = () => api.get('/cards/meus').then((r) => {
+    setCards(r.data);
+    fetchPropostas(r.data);
+  }).finally(() => setLoading(false));
+
   useEffect(() => { load(); }, []);
+
+  const handleAceitarProposta = async (propostaId: number) => {
+    if (!confirm('Aceitar esta proposta? Os outros professores serão notificados da recusa.')) return;
+    await api.post(`/contra-propostas/${propostaId}/aceitar`);
+    load();
+  };
+
+  const handleRecusarProposta = async (propostaId: number) => {
+    await api.post(`/contra-propostas/${propostaId}/recusar`);
+    setPropostasMap((prev) => {
+      const newMap = { ...prev };
+      for (const cardId in newMap) {
+        newMap[cardId] = newMap[cardId].filter((p) => p.id !== propostaId);
+      }
+      return newMap;
+    });
+  };
 
   const cancelar = async (id: number) => {
     if (!confirm('Cancelar este card?')) return;
@@ -335,7 +521,15 @@ export const MeusCards: React.FC = () => {
       )}
 
       {!loading && filtered.map((card) => (
-        <CardAluno key={card.id} card={card} onCancel={cancelar} onEdit={handleEdit}/>
+        <CardAluno
+          key={card.id}
+          card={card}
+          onCancel={cancelar}
+          onEdit={handleEdit}
+          propostas={propostasMap[card.id]}
+          onAceitarProposta={handleAceitarProposta}
+          onRecusarProposta={handleRecusarProposta}
+        />
       ))}
     </div>
   );
