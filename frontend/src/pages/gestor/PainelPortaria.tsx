@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import api from '../../config/api';
 import { Avatar, StatusPill } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { DatePicker } from '../../components/ui/DatePicker';
+import { useAuth } from '../../contexts/AuthContext';
 
 // ── helpers ────────────────────────────────────────────────────
 function initials(name: string) {
@@ -18,6 +20,31 @@ function avatarGrad(index: number) {
   ];
   return grads[index % grads.length];
 }
+function fmtDate(iso: string) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('T')[0].split('-');
+  return new Date(Number(y), Number(m) - 1, Number(d))
+    .toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+}
+function todayIso() {
+  return new Date().toISOString().split('T')[0];
+}
+
+const STATUS_ALL = ['PENDENTE_GESTOR', 'AGENDADO', 'EM_ANDAMENTO', 'CONCLUIDO', 'CANCELADO'];
+const STATUS_LABEL: Record<string, string> = {
+  PENDENTE_GESTOR: 'Pendente',
+  AGENDADO: 'Agendado',
+  EM_ANDAMENTO: 'Em andamento',
+  CONCLUIDO: 'Concluído',
+  CANCELADO: 'Cancelado',
+};
+const STATUS_COLORS: Record<string, { bg: string; fg: string; dot: string }> = {
+  PENDENTE_GESTOR: { bg: '#FFF7E0', fg: '#7A5B00', dot: '#E0A800' },
+  AGENDADO:        { bg: 'var(--accent-light)', fg: 'var(--accent-dark)', dot: 'var(--accent)' },
+  EM_ANDAMENTO:    { bg: 'var(--secondary-light)', fg: 'var(--secondary-dark)', dot: 'var(--secondary)' },
+  CONCLUIDO:       { bg: '#F0F4F0', fg: '#3A6B3A', dot: '#7bb87b' },
+  CANCELADO:       { bg: '#FFEBEE', fg: 'var(--accent-dark)', dot: 'var(--accent-dark)' },
+};
 
 // ── Column header ─────────────────────────────────────────────
 function ColumnHeader({ title, count, tone }: { title: string; count: number; tone: 'yellow' | 'accent' | 'green' }) {
@@ -46,7 +73,7 @@ function ColumnHeader({ title, count, tone }: { title: string; count: number; to
   );
 }
 
-// ── AgendamentoCard ───────────────────────────────────────────
+// ── AgendamentoCard (today kanban) ────────────────────────────
 function AgendamentoCard({
   ag, onAction, flashing, checkinLoading,
 }: {
@@ -61,7 +88,9 @@ function AgendamentoCard({
 
   const alunoName = ag.card?.aluno?.nome || 'Aluno';
   const mentorName = ag.mentor?.nome || 'Mentor';
-  const sala = ag.ambiente?.nome ? `${ag.ambiente.bloco ? ag.ambiente.bloco + ' · ' : ''}${ag.ambiente.nome}` : 'Sala a confirmar';
+  const sala = ag.ambiente?.nome
+    ? `${ag.ambiente.bloco ? ag.ambiente.bloco + ' · ' : ''}${ag.ambiente.nome}`
+    : 'Sala a confirmar';
 
   return (
     <div className="mx-card" style={{
@@ -136,7 +165,6 @@ function InstrucoesModal({ open, ag, onClose, onSend, saving }: {
 
   useEffect(() => {
     if (open && ag) {
-      const sala = ag.ambiente?.nome || 'sala';
       setText(`Procure o gestor na portaria 5 min antes — leve o crachá. Devolução da chave até ${ag.hora_fim || '17h00'}.`);
       setError('');
     }
@@ -203,6 +231,370 @@ function EmptyCol({ label }: { label: string }) {
   );
 }
 
+// ── Chip (filter toggle) ──────────────────────────────────────
+function Chip({
+  label, active, onClick, dot,
+}: { label: string; active: boolean; onClick: () => void; dot?: string }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        padding: '4px 10px', borderRadius: 999, border: 'none',
+        cursor: 'pointer', fontSize: 11, fontWeight: active ? 700 : 400,
+        fontFamily: 'var(--f-body)',
+        background: active ? 'var(--primary)' : 'var(--surface)',
+        color: active ? '#fff' : 'var(--text-2)',
+        transition: 'all 0.15s',
+        outline: active ? 'none' : '1px solid var(--border)',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {dot && (
+        <span style={{
+          width: 6, height: 6, borderRadius: '50%',
+          background: active ? 'rgba(255,255,255,0.7)' : dot,
+          display: 'inline-block', flexShrink: 0,
+        }}/>
+      )}
+      {label}
+    </button>
+  );
+}
+
+// ── UpcomingCard (card no painel direito) ─────────────────────
+function UpcomingCard({ ag }: { ag: any }) {
+  const alunoName = ag.card?.aluno?.nome || 'Aluno';
+  const mentorName = ag.mentor?.nome || 'Mentor';
+  const amb = ag.ambiente;
+  const sc = STATUS_COLORS[ag.status] || STATUS_COLORS.AGENDADO;
+
+  return (
+    <div style={{
+      padding: '10px 12px', borderRadius: 10, background: '#fff',
+      border: '1px solid var(--border)', marginBottom: 6,
+      borderLeft: `3px solid ${sc.dot}`,
+    }}>
+      {/* title + status */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+        <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 12, color: 'var(--text)', lineHeight: 1.3, flex: 1 }}>
+          {ag.card?.titulo || 'Mentoria'}
+        </span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+          background: sc.bg, color: sc.fg, whiteSpace: 'nowrap', flexShrink: 0,
+          textTransform: 'uppercase', letterSpacing: 0.4,
+        }}>
+          {STATUS_LABEL[ag.status]}
+        </span>
+      </div>
+
+      {/* people row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+        <Avatar initials={initials(alunoName)} color={avatarGrad(ag.id % 6)} size={20}/>
+        <span style={{ fontSize: 10, color: 'var(--text-2)' }}>{alunoName.split(' ')[0]}</span>
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14M13 6l6 6-6 6" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+        <Avatar initials={initials(mentorName)} color={avatarGrad((ag.id + 3) % 6)} size={20}/>
+        <span style={{ fontSize: 10, color: 'var(--text-2)' }}>{mentorName.split(' ')[0]}</span>
+      </div>
+
+      {/* time + sala row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          padding: '3px 8px', borderRadius: 6, background: 'var(--surface)',
+          fontSize: 10, color: 'var(--text)', fontWeight: 500,
+        }}>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="var(--text-3)" strokeWidth="2"/>
+            <path d="M12 7v5l3 2" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          {ag.hora_inicio}–{ag.hora_fim}
+        </div>
+        {amb && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '3px 8px', borderRadius: 6, background: 'var(--surface)',
+            fontSize: 10, color: 'var(--text)', fontWeight: 500, flex: 1,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--text-3)" strokeWidth="2" fill="none"/>
+            </svg>
+            {amb.bloco ? `${amb.bloco} · ` : ''}{amb.nome}
+            {!!amb.exige_chave && (
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" style={{ marginLeft: 3, flexShrink: 0 }}>
+                <circle cx="8" cy="15" r="4" stroke="var(--text-3)" strokeWidth="2"/>
+                <path d="M12 11l6-6M16 6l2 2" stroke="var(--text-3)" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── UpcomingPanel (painel direito completo) ───────────────────
+function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
+  const [allAg, setAllAg] = useState<any[]>([]);
+  const [ambientes, setAmbientes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // filters
+  const [filterTipo, setFilterTipo] = useState<string>('TODOS');
+  const [filterBloco, setFilterBloco] = useState<string>('TODOS');
+  const [filterExigeChave, setFilterExigeChave] = useState<boolean | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string[]>(['PENDENTE_GESTOR', 'AGENDADO']);
+  const [filterDataAte, setFilterDataAte] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [agRes, ambRes] = await Promise.all([
+        api.get('/agendamentos'),
+        api.get('/ambientes'),
+      ]);
+      setAllAg(agRes.data);
+      setAmbientes(ambRes.data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load, refreshSignal]);
+
+  const blocos = useMemo(() => {
+    const set = new Set<string>();
+    ambientes.forEach((a) => { if (a.bloco) set.add(a.bloco); });
+    return Array.from(set).sort();
+  }, [ambientes]);
+
+  const today = todayIso();
+
+  const filtered = useMemo(() => {
+    return allAg
+      .filter((ag) => {
+        const agDate = (ag.data || '').split('T')[0];
+        return agDate >= today;
+      })
+      .filter((ag) => filterStatus.includes(ag.status))
+      .filter((ag) => filterTipo === 'TODOS' || ag.ambiente?.tipo === filterTipo)
+      .filter((ag) => filterBloco === 'TODOS' || ag.ambiente?.bloco === filterBloco)
+      .filter((ag) => filterExigeChave === null || !!ag.ambiente?.exige_chave === filterExigeChave)
+      .filter((ag) => {
+        if (!filterDataAte) return true;
+        const agDate = (ag.data || '').split('T')[0];
+        return agDate <= filterDataAte;
+      })
+      .sort((a, b) => {
+        const da = (a.data || '').split('T')[0];
+        const db = (b.data || '').split('T')[0];
+        return da.localeCompare(db) || (a.hora_inicio || '').localeCompare(b.hora_inicio || '');
+      });
+  }, [allAg, today, filterStatus, filterTipo, filterBloco, filterExigeChave, filterDataAte]);
+
+  // group by date
+  const grouped = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    filtered.forEach((ag) => {
+      const key = (ag.data || '').split('T')[0];
+      if (!map[key]) map[key] = [];
+      map[key].push(ag);
+    });
+    return map;
+  }, [filtered]);
+
+  const toggleStatus = (s: string) => {
+    setFilterStatus((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+  };
+
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 16, border: '1px solid var(--border)',
+      display: 'flex', flexDirection: 'column',
+      position: 'sticky', top: 0, maxHeight: 'calc(100vh - 56px)',
+      overflow: 'hidden',
+    }}>
+      {/* Panel header */}
+      <div style={{ padding: '16px 18px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="var(--primary)" strokeWidth="2" fill="none"/>
+                <path d="M3 12h18M8 5v14M16 5v14" stroke="var(--primary)" strokeWidth="1.5"/>
+              </svg>
+              <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 15, color: 'var(--text)' }}>
+                Visão de Salas
+              </span>
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
+              Agendamentos futuros · {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            onClick={load}
+            title="Atualizar"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 8px', cursor: 'pointer' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M1 4v6h6M23 20v-6h-6" stroke="var(--text-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="var(--text-2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* ── Filters ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
+
+          {/* Status chips */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+              Status
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {STATUS_ALL.map((s) => (
+                <Chip
+                  key={s}
+                  label={STATUS_LABEL[s]}
+                  active={filterStatus.includes(s)}
+                  dot={STATUS_COLORS[s]?.dot}
+                  onClick={() => toggleStatus(s)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Tipo chips */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+              Tipo de ambiente
+            </div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[
+                { value: 'TODOS', label: 'Todos' },
+                { value: 'SALA_FECHADA', label: 'Sala fechada' },
+                { value: 'AMBIENTE_COMUM', label: 'Amb. comum' },
+              ].map((o) => (
+                <Chip key={o.value} label={o.label} active={filterTipo === o.value} onClick={() => setFilterTipo(o.value)}/>
+              ))}
+            </div>
+          </div>
+
+          {/* Bloco + Exige chave */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+                Bloco
+              </div>
+              <select
+                value={filterBloco}
+                onChange={(e) => setFilterBloco(e.target.value)}
+                style={{
+                  width: '100%', padding: '5px 8px', borderRadius: 8,
+                  border: '1px solid var(--border)', background: 'var(--surface)',
+                  fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--text)',
+                  outline: 'none', cursor: 'pointer',
+                }}
+              >
+                <option value="TODOS">Todos os blocos</option>
+                {blocos.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+                Chave
+              </div>
+              <button
+                onClick={() => setFilterExigeChave((v) => v === true ? null : true)}
+                style={{
+                  padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                  border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                  background: filterExigeChave === true ? 'var(--primary)' : 'var(--surface)',
+                  color: filterExigeChave === true ? '#fff' : 'var(--text-2)',
+                  outline: filterExigeChave === true ? 'none' : '1px solid var(--border)',
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                  <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M12 11l6-6M16 6l2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                Exige chave
+              </button>
+            </div>
+          </div>
+
+          {/* Date filter */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 5 }}>
+              Até a data
+            </div>
+            <DatePicker
+              value={filterDataAte}
+              onChange={setFilterDataAte}
+              min={today}
+              placeholder="Sem limite de data"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Results list ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 18px 18px' }}>
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[1,2,3].map((i) => <Skeleton key={i} height={72}/>)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{
+            padding: '32px 16px', textAlign: 'center',
+            border: '1.5px dashed var(--border)', borderRadius: 12,
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🗓️</div>
+            <p style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 500 }}>Nenhum agendamento</p>
+            <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+              Ajuste os filtros para ver outros resultados.
+            </p>
+          </div>
+        ) : (
+          Object.entries(grouped).map(([date, items]) => (
+            <div key={date} style={{ marginBottom: 16 }}>
+              {/* Date divider */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+              }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: 'var(--primary)',
+                  fontFamily: 'var(--f-head)', whiteSpace: 'nowrap',
+                  textTransform: 'capitalize',
+                }}>
+                  {date === today ? '🔵 Hoje' : fmtDate(date)}
+                </span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }}/>
+                <span style={{
+                  fontSize: 10, color: 'var(--text-3)', fontWeight: 600,
+                  background: 'var(--surface)', padding: '1px 7px', borderRadius: 999,
+                  border: '1px solid var(--border)',
+                }}>
+                  {items.length}
+                </span>
+              </div>
+
+              {items.map((ag) => <UpcomingCard key={ag.id} ag={ag}/>)}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────
 export const PainelPortaria: React.FC = () => {
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
@@ -211,6 +603,8 @@ export const PainelPortaria: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [checkinLoading, setCheckinLoading] = useState<Record<number, boolean>>({});
   const [flashing, setFlashing] = useState<number | null>(null);
+  const [rightRefresh, setRightRefresh] = useState(0);
+  const { user } = useAuth();
 
   const load = useCallback(() => {
     api.get('/agendamentos/hoje')
@@ -230,6 +624,7 @@ export const PainelPortaria: React.FC = () => {
       await api.patch(`/agendamentos/${instrucaoModal.id}/instrucoes`, { instrucoes: text });
       setInstrucaoModal(null);
       load();
+      setRightRefresh((n) => n + 1);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Erro ao enviar instruções.');
     } finally {
@@ -244,6 +639,7 @@ export const PainelPortaria: React.FC = () => {
       setFlashing(ag.id);
       setTimeout(() => setFlashing(null), 1200);
       load();
+      setRightRefresh((n) => n + 1);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Erro no check-in.');
     } finally {
@@ -256,6 +652,7 @@ export const PainelPortaria: React.FC = () => {
     try {
       await api.post(`/checkout/${ag.id}`);
       load();
+      setRightRefresh((n) => n + 1);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Erro no check-out.');
     } finally {
@@ -269,101 +666,77 @@ export const PainelPortaria: React.FC = () => {
     if (ag.status === 'EM_ANDAMENTO') { doCheckout(ag); return; }
   };
 
-  if (loading) return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-      {[1,2,3].map((i) => <Skeleton key={i} height={300}/>)}
-    </div>
-  );
-
   const pendentes   = agendamentos.filter((a) => a.status === 'PENDENTE_GESTOR');
   const agendados   = agendamentos.filter((a) => a.status === 'AGENDADO');
   const emAndamento = agendamentos.filter((a) => a.status === 'EM_ANDAMENTO');
 
-  const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
-
   return (
-    <div className="animate-fadeIn">
-      {/* Topbar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 16,
-        marginBottom: 20,
-      }}>
-        <div>
-          <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 22, color: 'var(--text)', margin: 0 }}>
-            Painel de Portaria
+    <div className="animate-fadeIn" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 24, alignItems: 'start' }}>
+
+      {/* ── LEFT: Portaria (hoje) ── */}
+      <div>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 28, color: 'var(--text)', margin: 0 }}>
+            Olá, {user?.nome?.split(' ')[0]}!
           </h1>
-          <p className="mx-caption" style={{ marginTop: 2, textTransform: 'capitalize' }}>{today} · auto-refresh 30s</p>
+          <p className="mx-caption" style={{ marginTop: 4 }}>
+            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          </p>
         </div>
-        <div style={{ flex: 1 }}/>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '6px 12px', borderRadius: 999, background: 'var(--secondary-light)',
-        }}>
-          <span className="mx-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--secondary)', display: 'inline-block' }}/>
-          <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--secondary-dark)' }}>ao vivo</span>
+
+        {/* Stat row */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          {[
+            { label: 'Total hoje', value: agendamentos.length, color: 'var(--primary)', bg: 'var(--primary-light)' },
+            { label: 'Pendentes', value: pendentes.length, color: '#7A5B00', bg: '#FFF7E0' },
+            { label: 'Em andamento', value: emAndamento.length, color: 'var(--secondary)', bg: 'var(--secondary-light)' },
+          ].map((s) => (
+            <div key={s.label} className="mx-card" style={{ padding: '14px 18px', flex: 1 }}>
+              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'var(--f-head)', color: s.color }}>{s.value}</div>
+              <div className="mx-caption" style={{ marginTop: 2, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.4, fontSize: 10 }}>{s.label}</div>
+            </div>
+          ))}
         </div>
+
+        {/* Kanban */}
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            {[1,2,3].map((i) => <Skeleton key={i} height={280}/>)}
+          </div>
+        ) : agendamentos.length === 0 ? (
+          <div className="mx-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🏢</div>
+            <p>Nenhuma mentoria agendada para hoje.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            <div>
+              <ColumnHeader title="Pendente de Instruções" count={pendentes.length} tone="yellow"/>
+              {pendentes.map((ag) => (
+                <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={false} checkinLoading={!!checkinLoading[ag.id]}/>
+              ))}
+              {pendentes.length === 0 && <EmptyCol label="Nada aguardando 🎉"/>}
+            </div>
+            <div>
+              <ColumnHeader title="Agendado · aguardando check-in" count={agendados.length} tone="accent"/>
+              {agendados.map((ag) => (
+                <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={flashing === ag.id} checkinLoading={!!checkinLoading[ag.id]}/>
+              ))}
+              {agendados.length === 0 && <EmptyCol label="Tudo em andamento"/>}
+            </div>
+            <div>
+              <ColumnHeader title="Em andamento · sala ocupada" count={emAndamento.length} tone="green"/>
+              {emAndamento.map((ag) => (
+                <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={false} checkinLoading={!!checkinLoading[ag.id]}/>
+              ))}
+              {emAndamento.length === 0 && <EmptyCol label="Nenhuma sala em uso"/>}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Stat row */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
-        {[
-          { label: 'Total hoje', value: agendamentos.length, color: 'var(--primary)', bg: 'var(--primary-light)' },
-          { label: 'Pendentes', value: pendentes.length, color: '#7A5B00', bg: '#FFF7E0' },
-          { label: 'Em andamento', value: emAndamento.length, color: 'var(--secondary)', bg: 'var(--secondary-light)' },
-        ].map((s) => (
-          <div key={s.label} className="mx-card" style={{ padding: '14px 18px', flex: 1 }}>
-            <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'var(--f-head)', color: s.color }}>{s.value}</div>
-            <div className="mx-caption" style={{ marginTop: 2, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 0.4, fontSize: 10 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Kanban */}
-      {agendamentos.length === 0 ? (
-        <div className="mx-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>🏢</div>
-          <p>Nenhuma mentoria agendada para hoje.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-          <div>
-            <ColumnHeader title="Pendente de Instruções" count={pendentes.length} tone="yellow"/>
-            {pendentes.map((ag) => (
-              <AgendamentoCard
-                key={ag.id} ag={ag}
-                onAction={handleAction}
-                flashing={false}
-                checkinLoading={!!checkinLoading[ag.id]}
-              />
-            ))}
-            {pendentes.length === 0 && <EmptyCol label="Nada aguardando 🎉"/>}
-          </div>
-          <div>
-            <ColumnHeader title="Agendado · aguardando check-in" count={agendados.length} tone="accent"/>
-            {agendados.map((ag) => (
-              <AgendamentoCard
-                key={ag.id} ag={ag}
-                onAction={handleAction}
-                flashing={flashing === ag.id}
-                checkinLoading={!!checkinLoading[ag.id]}
-              />
-            ))}
-            {agendados.length === 0 && <EmptyCol label="Tudo em andamento"/>}
-          </div>
-          <div>
-            <ColumnHeader title="Em andamento · sala ocupada" count={emAndamento.length} tone="green"/>
-            {emAndamento.map((ag) => (
-              <AgendamentoCard
-                key={ag.id} ag={ag}
-                onAction={handleAction}
-                flashing={false}
-                checkinLoading={!!checkinLoading[ag.id]}
-              />
-            ))}
-            {emAndamento.length === 0 && <EmptyCol label="Nenhuma sala em uso"/>}
-          </div>
-        </div>
-      )}
+      {/* ── RIGHT: Visão de Salas ── */}
+      <UpcomingPanel refreshSignal={rightRefresh}/>
 
       <InstrucoesModal
         open={!!instrucaoModal}

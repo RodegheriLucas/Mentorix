@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../config/api';
+import { DatePicker } from '../../components/ui/DatePicker';
 
 interface DateSlot {
   data: string;
@@ -132,7 +133,8 @@ export const NovoCard: React.FC = () => {
       }
       navigate('/aluno/meus-cards');
     } catch (err: any) {
-      setError(err.response?.data?.message || `Erro ao ${isEdit ? 'salvar' : 'criar'} solicitação.`);
+      const msg = err.response?.data?.message;
+      setError(Array.isArray(msg) ? msg.join(' · ') : (msg || `Erro ao ${isEdit ? 'salvar' : 'criar'} solicitação.`));
     } finally {
       setLoading(false);
     }
@@ -148,13 +150,9 @@ export const NovoCard: React.FC = () => {
     <div className="animate-fadeIn" style={{ maxWidth: 720 }}>
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
-        <p className="mx-caption" style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: 1,
-          textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 4,
-        }}>Aluno · UniMatch</p>
         <h1 className="mx-h1" style={{ fontSize: 26 }}>{isEdit ? 'Editar solicitação' : 'Nova solicitação'}</h1>
         <p className="mx-caption" style={{ marginTop: 4 }}>
-          {isEdit ? 'Atualize os detalhes da sua necessidade acadêmica.' : 'Descreva sua necessidade acadêmica para que mentores compatíveis possam aceitar.'}
+          {isEdit ? 'Atualize os detalhes da sua necessidade acadêmica.' : 'Descreva sua necessidade acadêmica.'}
         </p>
       </div>
 
@@ -278,17 +276,31 @@ export const NovoCard: React.FC = () => {
             <h2 className="mx-h3" style={{ marginBottom: 4 }}>Disponibilidade horária</h2>
             <p className="mx-caption" style={{ marginBottom: 16 }}>Informe as datas e horários em que você está disponível para a sessão.</p>
 
+            {/* Date row */}
+            <div style={{ marginBottom: 10 }}>
+              <DatePicker
+                value={novaData}
+                onChange={setNovaData}
+                min={today}
+                label="Data"
+                placeholder="Escolha uma data..."
+              />
+              {novaData && (
+                <div style={{
+                  marginTop: 6, fontSize: 11, color: 'var(--primary-dark)', fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" fill="none"/>
+                    <path d="M3 9h18" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  {new Date(novaData + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                </div>
+              )}
+            </div>
+
+            {/* Time + button row */}
             <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 150px' }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Data</label>
-                <input
-                  type="date"
-                  min={today}
-                  value={novaData}
-                  onChange={(e) => setNovaData(e.target.value)}
-                  style={{ ...inputStyle, padding: '10px 12px' }}
-                />
-              </div>
               <div style={{ flex: '1 1 110px' }}>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-2)', marginBottom: 5 }}>Início</label>
                 <input
@@ -328,23 +340,41 @@ export const NovoCard: React.FC = () => {
             {slots.length > 0 && (
               <div style={{ marginTop: 14 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 8 }}>Horários adicionados:</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {slots.map((s, i) => {
-                    const [year, month, day] = s.data.split('-');
-                    const date = new Date(Number(year), Number(month) - 1, Number(day));
-                    const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-                    const label = `${weekday}, ${day}/${month} ${s.hora_inicio}–${s.hora_fim}`;
+                    const isoDate = (s.data || '').split('T')[0];
+                    const [year, month, day] = isoDate.split('-');
+                    const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+                    const weekday = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+                    const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
                     return (
                       <div key={i} style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        background: 'var(--primary-light)', borderRadius: 999,
-                        padding: '5px 10px', fontSize: 12,
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        background: 'var(--primary-light)', borderRadius: 12,
+                        padding: '8px 12px', gap: 10,
                       }}>
-                        <span style={{ color: 'var(--primary-dark)', fontWeight: 500 }}>{label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="4" width="18" height="18" rx="3" stroke="var(--primary)" strokeWidth="2" fill="none"/>
+                            <path d="M3 9h18M8 2v4M16 2v4" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>
+                              {capitalize(weekday)}, {String(day).padStart(2,'0')}/{String(month).padStart(2,'0')}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 500 }}>
+                              {s.hora_inicio} – {s.hora_fim}
+                            </div>
+                          </div>
+                        </div>
                         <button
                           type="button"
                           onClick={() => setSlots(slots.filter((_, idx) => idx !== i))}
-                          style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0 }}
+                          style={{
+                            background: 'rgba(230,74,25,0.12)', border: 'none', borderRadius: 6,
+                            color: 'var(--accent-dark)', cursor: 'pointer', fontSize: 13,
+                            lineHeight: 1, padding: '4px 6px', fontWeight: 700,
+                          }}
                         >×</button>
                       </div>
                     );

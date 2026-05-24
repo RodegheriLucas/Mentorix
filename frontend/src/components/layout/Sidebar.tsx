@@ -12,7 +12,7 @@ interface NavItem {
 const iconFor = (id: string, active: boolean) => {
   const s = active ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.65)';
   const w = '1.8';
-  if (id === 'portaria' || id === 'dashboard-gestor')
+  if (id === 'portaria' )
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z" stroke={s} strokeWidth={w} fill="none" strokeLinejoin="round"/></svg>;
   if (id === 'agenda')
     return <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="3" stroke={s} strokeWidth={w} fill="none"/><path d="M3 9h18M8 2v4M16 2v4" stroke={s} strokeWidth={w} strokeLinecap="round"/></svg>;
@@ -49,7 +49,6 @@ const navItems: Array<NavItem & { iconId: string; }> = [
   { to: '/professor/feed', label: 'Feed TCC', iconId: 'feed', roles: ['PROFESSOR_MENTOR'] },
   { to: '/professor/agendamentos', label: 'Agendamentos', iconId: 'agenda', roles: ['PROFESSOR_MENTOR'] },
   // GESTOR
-  { to: '/gestor', label: 'Dashboard', iconId: 'dashboard-gestor', roles: ['GESTOR'] },
   { to: '/gestor/portaria', label: 'Painel de Portaria', iconId: 'portaria', roles: ['GESTOR'] },
   { to: '/gestor/ambientes', label: 'Ambientes', iconId: 'ambientes', roles: ['GESTOR'] },
   { to: '/gestor/disputas', label: 'Disputas', iconId: 'disputas', roles: ['GESTOR'] },

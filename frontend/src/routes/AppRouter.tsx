@@ -18,7 +18,6 @@ import { MinhasHoras } from '../pages/mentor/MinhasHoras';
 import { AbrirContestacao } from '../pages/mentor/AbrirContestacao';
 
 // Gestor
-import { GestorDashboard } from '../pages/gestor/GestorDashboard';
 import { PainelPortaria } from '../pages/gestor/PainelPortaria';
 import { GerenciarAmbientes } from '../pages/gestor/GerenciarAmbientes';
 import { ResolverDisputas } from '../pages/gestor/ResolverDisputas';
@@ -34,7 +33,7 @@ const RoleRedirect: React.FC = () => {
     ALUNO: '/aluno',
     ALUNO_MENTOR: '/mentor/agendamentos',
     PROFESSOR_MENTOR: '/professor/agendamentos',
-    GESTOR: '/gestor',
+    GESTOR: '/gestor/portaria',
   };
   return <Navigate to={routes[user.papel] || '/login'} replace />;
 };
@@ -77,7 +76,7 @@ export const AppRouter: React.FC = () => (
         <Route path="/professor/conta"        element={<MW roles={['PROFESSOR_MENTOR']}><ContaPage /></MW>} />
 
         {/* GESTOR */}
-        <Route path="/gestor"           element={<GW><GestorDashboard /></GW>} />
+        <Route path="/gestor"           element={<Navigate to="/gestor/portaria" replace />} />
         <Route path="/gestor/portaria"  element={<GW><PainelPortaria /></GW>} />
         <Route path="/gestor/ambientes" element={<GW><GerenciarAmbientes /></GW>} />
         <Route path="/gestor/disputas"  element={<GW><ResolverDisputas /></GW>} />
