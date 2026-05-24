@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 
@@ -15,6 +15,9 @@ const TOPICS = [
   'Cálculo II', 'Álgebra Linear',
   'UX/UI', 'Figma', 'C', 'Git', 'CI/CD',
 ];
+
+const ACCEPTED_EXTS = '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg';
+const MAX_SIZE_MB = 10;
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -35,9 +38,23 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', boxSizing: 'border-box',
 };
 
+function formatBytes(bytes: number) {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileIcon(name: string) {
+  const ext = name.split('.').pop()?.toLowerCase();
+  if (ext === 'pdf') return '📄';
+  if (['doc', 'docx'].includes(ext || '')) return '📝';
+  if (['png', 'jpg', 'jpeg'].includes(ext || '')) return '🖼️';
+  return '📎';
+}
+
 export const NovoCard: React.FC = () => {
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -52,8 +69,28 @@ export const NovoCard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // TCC document attachment
+  const [documento, setDocumento] = useState<File | null>(null);
+  const [documentoError, setDocumentoError] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+
   const toggleTopic = (t: string) => {
     setSelectedTopics((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
+  };
+
+  const handleFileChange = (file: File | null) => {
+    setDocumentoError('');
+    if (!file) { setDocumento(null); return; }
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setDocumentoError(`O arquivo deve ter no máximo ${MAX_SIZE_MB} MB.`);
+      return;
+    }
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!ACCEPTED_EXTS.split(',').includes(ext)) {
+      setDocumentoError('Formato não suportado. Use PDF, DOC, DOCX, TXT, PNG ou JPG.');
+      return;
+    }
+    setDocumento(file);
   };
 
   const addSlot = () => {
@@ -90,17 +127,29 @@ export const NovoCard: React.FC = () => {
       setError('Adicione pelo menos um horário de disponibilidade.');
       return;
     }
-    if (selectedTopics.length === 0) { setError('Selecione pelo menos um assunto.'); return; }
+    if (categoria === 'GERAL' && selectedTopics.length === 0) {
+      setError('Selecione pelo menos um assunto.');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
-      await api.post('/cards', {
+      const res = await api.post('/cards', {
         titulo,
         descricao,
         categoria,
-        tags: selectedTopics,
+        tags: categoria === 'TCC' ? [] : selectedTopics,
         disponibilidades: categoria === 'GERAL' ? slots : [],
       });
+
+      if (categoria === 'TCC' && documento) {
+        const formData = new FormData();
+        formData.append('arquivo', documento);
+        await api.post(`/cards/${res.data.id}/documento`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+
       navigate('/aluno/meus-cards');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao criar solicitação.');
@@ -109,7 +158,10 @@ export const NovoCard: React.FC = () => {
     }
   };
 
-  const canPublish = titulo.trim() && descricao.trim() && selectedTopics.length > 0 && (categoria === 'TCC' || slots.length > 0);
+  const canPublish =
+    titulo.trim() &&
+    descricao.trim() &&
+    (categoria === 'TCC' || (selectedTopics.length > 0 && slots.length > 0));
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 720 }}>
@@ -170,72 +222,187 @@ export const NovoCard: React.FC = () => {
             </div>
           </Field>
 
-          <Field label="Assuntos" hint="Tags usadas para casar com o mentor">
-            {/* Trigger */}
-            <button type="button" onClick={() => setTopicOpen((o) => !o)} style={{
-              width: '100%', textAlign: 'left',
-              padding: '12px 14px', borderRadius: 12,
-              border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              fontFamily: 'var(--f-body)', fontSize: 14, color: 'var(--text)',
-            }}>
-              <span style={{ color: selectedTopics.length ? 'var(--text)' : 'var(--text-3)' }}>
-                {selectedTopics.length
-                  ? `${selectedTopics.length} assunto${selectedTopics.length > 1 ? 's' : ''} selecionado${selectedTopics.length > 1 ? 's' : ''}`
-                  : 'Escolha os assuntos…'}
-              </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M6 9l6 6 6-6" stroke="var(--text-2)" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-
-            {/* Selected chips */}
-            {selectedTopics.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-                {selectedTopics.map((t) => (
-                  <button key={t} type="button" onClick={() => toggleTopic(t)} style={{
-                    padding: '5px 10px 5px 12px', borderRadius: 999,
-                    background: 'var(--primary)', color: '#fff', border: 0, cursor: 'pointer',
-                    fontFamily: 'var(--f-body)', fontSize: 12, fontWeight: 500,
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                  }}>
-                    #{t}
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                      <path d="M6 6l12 12M18 6l-12 12" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Dropdown */}
-            {topicOpen && (
-              <div style={{
-                marginTop: 12, padding: 14, borderRadius: 14,
-                background: 'var(--surface)', border: '1px solid var(--border)',
+          {/* Assuntos — visível apenas para GERAL */}
+          {categoria === 'GERAL' && (
+            <Field label="Assuntos" hint="Tags usadas para casar com o mentor">
+              <button type="button" onClick={() => setTopicOpen((o) => !o)} style={{
+                width: '100%', textAlign: 'left',
+                padding: '12px 14px', borderRadius: 12,
+                border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                fontFamily: 'var(--f-body)', fontSize: 14, color: 'var(--text)',
               }}>
-                <div className="mx-caption" style={{ fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10 }}>
-                  Disponíveis
+                <span style={{ color: selectedTopics.length ? 'var(--text)' : 'var(--text-3)' }}>
+                  {selectedTopics.length
+                    ? `${selectedTopics.length} assunto${selectedTopics.length > 1 ? 's' : ''} selecionado${selectedTopics.length > 1 ? 's' : ''}`
+                    : 'Escolha os assuntos…'}
+                </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 9l6 6 6-6" stroke="var(--text-2)" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+
+              {selectedTopics.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                  {selectedTopics.map((t) => (
+                    <button key={t} type="button" onClick={() => toggleTopic(t)} style={{
+                      padding: '5px 10px 5px 12px', borderRadius: 999,
+                      background: 'var(--primary)', color: '#fff', border: 0, cursor: 'pointer',
+                      fontFamily: 'var(--f-body)', fontSize: 12, fontWeight: 500,
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                    }}>
+                      #{t}
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 6l12 12M18 6l-12 12" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                  ))}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {TOPICS.map((t) => {
-                    const on = selectedTopics.includes(t);
-                    return (
-                      <button key={t} type="button" onClick={() => toggleTopic(t)} style={{
-                        padding: '5px 10px', borderRadius: 999, cursor: 'pointer',
-                        border: on ? '1px solid var(--primary)' : '1px solid var(--border)',
-                        background: on ? 'var(--primary)' : '#fff',
-                        color: on ? '#fff' : 'var(--text)',
-                        fontFamily: 'var(--f-body)', fontSize: 12, fontWeight: 500,
-                      }}>
-                        {on ? '✓ ' : ''}#{t}
-                      </button>
-                    );
-                  })}
+              )}
+
+              {topicOpen && (
+                <div style={{
+                  marginTop: 12, padding: 14, borderRadius: 14,
+                  background: 'var(--surface)', border: '1px solid var(--border)',
+                }}>
+                  <div className="mx-caption" style={{ fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10 }}>
+                    Disponíveis
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {TOPICS.map((t) => {
+                      const on = selectedTopics.includes(t);
+                      return (
+                        <button key={t} type="button" onClick={() => toggleTopic(t)} style={{
+                          padding: '5px 10px', borderRadius: 999, cursor: 'pointer',
+                          border: on ? '1px solid var(--primary)' : '1px solid var(--border)',
+                          background: on ? 'var(--primary)' : '#fff',
+                          color: on ? '#fff' : 'var(--text)',
+                          fontFamily: 'var(--f-body)', fontSize: 12, fontWeight: 500,
+                        }}>
+                          {on ? '✓ ' : ''}#{t}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
-          </Field>
+              )}
+            </Field>
+          )}
+
+          {/* Documento — visível apenas para TCC */}
+          {categoria === 'TCC' && (
+            <Field
+              label="Documento de apoio"
+              hint="Opcional — envie um arquivo que ajude o professor a entender o seu TCC"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_EXTS}
+                style={{ display: 'none' }}
+                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+              />
+
+              {/* Drop zone */}
+              {!documento && (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    handleFileChange(e.dataTransfer.files?.[0] ?? null);
+                  }}
+                  style={{
+                    border: `2px dashed ${dragOver ? 'var(--primary)' : 'var(--border)'}`,
+                    borderRadius: 14,
+                    background: dragOver ? 'var(--primary-light)' : 'var(--surface)',
+                    padding: '28px 20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 10,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12,
+                    background: dragOver ? 'var(--primary)' : 'var(--primary-light)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.15s',
+                  }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke={dragOver ? '#fff' : 'var(--primary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M4 20h16" stroke={dragOver ? '#fff' : 'var(--primary)'} strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13, color: 'var(--text)' }}>
+                      Arraste um arquivo ou{' '}
+                      <span style={{ color: 'var(--primary)', textDecoration: 'underline' }}>
+                        clique para selecionar
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+                      PDF, DOC, DOCX, TXT, PNG, JPG — máx. {MAX_SIZE_MB} MB
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* File preview after selection */}
+              {documento && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '12px 14px', borderRadius: 12,
+                  border: '1.5px solid var(--primary)',
+                  background: 'var(--primary-light)',
+                }}>
+                  <div style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    background: 'var(--primary)', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', fontSize: 18, flexShrink: 0,
+                  }}>
+                    {fileIcon(documento.name)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13,
+                      color: 'var(--primary-dark)', whiteSpace: 'nowrap',
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      {documento.name}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--primary)', marginTop: 2 }}>
+                      {formatBytes(documento.size)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocumento(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    style={{
+                      background: 'rgba(230,74,25,0.12)', border: 'none', borderRadius: 8,
+                      color: 'var(--accent-dark)', cursor: 'pointer',
+                      padding: '5px 8px', fontWeight: 700, fontSize: 15, lineHeight: 1,
+                    }}
+                    title="Remover arquivo"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+
+              {documentoError && (
+                <p style={{ fontSize: 12, color: 'var(--accent-dark)', marginTop: 6 }}>{documentoError}</p>
+              )}
+            </Field>
+          )}
         </div>
 
         {categoria === 'GERAL' && (

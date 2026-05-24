@@ -124,6 +124,13 @@ export class CardsService {
     return this.findById(cardId);
   }
 
+  async updateDocumento(cardId: number, alunoId: number, filename: string): Promise<Card> {
+    const card = await this.findById(cardId);
+    if (card.aluno_id !== alunoId) throw new ForbiddenException('Sem permissão.');
+    await this.cardRepo.update(cardId, { documento_url: `/uploads/card-docs/${filename}` });
+    return this.findById(cardId);
+  }
+
   async cancelar(cardId: number, alunoId: number): Promise<void> {
     const card = await this.findById(cardId);
     if (card.aluno_id !== alunoId) throw new ForbiddenException('Sem permissão.');

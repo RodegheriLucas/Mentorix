@@ -30,6 +30,9 @@ export class Card {
   @Column({ type: 'json' })
   tags: string[];
 
+  @Column({ name: 'documento_url', type: 'varchar', length: 500, nullable: true })
+  documento_url: string | null;
+
   @Column({ type: 'enum', enum: CardStatus, default: CardStatus.ABERTO })
   status: CardStatus;
 
