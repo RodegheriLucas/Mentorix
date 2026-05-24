@@ -182,7 +182,7 @@ export const OrientacaoDetalhe: React.FC = () => {
 
           {/* Datas */}
           {ag.data && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
               <span style={{ fontSize: 11, color: 'var(--text-2)', padding: '4px 9px', borderRadius: 8, background: 'var(--surface)', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.8" fill="none"/>
@@ -200,6 +200,50 @@ export const OrientacaoDetalhe: React.FC = () => {
                 </span>
               )}
             </div>
+          )}
+
+          {/* Tags */}
+          {ag.card?.tags?.length > 0 && (
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
+              {(ag.card.tags as string[]).map((tag) => (
+                <span key={tag} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 999, background: 'var(--primary-light)', color: 'var(--primary-dark)', fontWeight: 500 }}>
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Descrição */}
+          {ag.card?.descricao && (
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, color: 'var(--text-3)', marginBottom: 6 }}>
+                Descrição
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.55, margin: 0 }}>
+                {ag.card.descricao}
+              </p>
+            </div>
+          )}
+
+          {/* Documento */}
+          {ag.card?.documento_url && (
+            <a
+              href={ag.card.documento_url}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                padding: '8px 14px', borderRadius: 10, textDecoration: 'none',
+                background: 'var(--primary-light)', color: 'var(--primary-dark)',
+                fontSize: 12, fontWeight: 600, border: '1px solid rgba(93,70,184,0.2)',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              Ver documento do aluno
+            </a>
           )}
 
           {/* Encerrar button — professor only, only if not concluded */}

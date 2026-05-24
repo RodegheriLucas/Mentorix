@@ -183,9 +183,12 @@ function CalendarView({ items }: { items: any[] }) {
 
 // ── List item ─────────────────────────────────────────────────
 function AgItem({ ag, onCancel, isMentor, isProfessor, onVerDetalhes }: { ag: any; onCancel: (id: number) => void; isMentor: boolean; isProfessor: boolean; onVerDetalhes: (id: number) => void }) {
-  const isLive = ag.status === 'EM_ANDAMENTO';
-  const isAg   = ag.status === 'AGENDADO';
-  const isDone = ag.status === 'CONCLUIDO';
+  const isTCC  = ag.card?.categoria === 'TCC';
+  // TCC orientations are ongoing by nature (no fixed schedule/room) — display as EM_ANDAMENTO
+  const displayStatus = isTCC && ag.status === 'AGENDADO' ? 'EM_ANDAMENTO' : ag.status;
+  const isLive = displayStatus === 'EM_ANDAMENTO';
+  const isAg   = displayStatus === 'AGENDADO';
+  const isDone = displayStatus === 'CONCLUIDO';
 
   const title = ag.card?.titulo || ('Orienta\u00e7\u00e3o');
   const otherPerson = isMentor ? ag.card?.aluno : ag.mentor;
@@ -207,7 +210,7 @@ function AgItem({ ag, onCancel, isMentor, isProfessor, onVerDetalhes }: { ag: an
   return (
     <div className="mx-card" style={{
       overflow: 'hidden', marginBottom: 10,
-      border: isLive ? '1.5px solid var(--secondary)' : '1px solid transparent',
+      border: isLive && !isTCC ? '1.5px solid var(--secondary)' : '1px solid transparent',
     }}>
       <div style={{ display: 'flex' }}>
         <div style={{ flex: 1, padding: 14 }}>
@@ -217,12 +220,12 @@ function AgItem({ ag, onCancel, isMentor, isProfessor, onVerDetalhes }: { ag: an
               <div className="mx-caption" style={{ marginBottom: 1, fontSize: 11 }}>{role}: {otherName}</div>
               <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>{title}</div>
             </div>
-            <StatusPill status={ag.status} size="sm" pulse={isLive}/>
+            <StatusPill status={displayStatus} size="sm" pulse={isLive && !isTCC}/>
           </div>
 
-          {(isLive || isAg || isDone) && <CheckInOutCard c={checkinData}/>}
+          {!isTCC && (isLive || isAg || isDone) && <CheckInOutCard c={checkinData}/>}
 
-          {ag.status === 'PENDENTE_GESTOR' && (
+          {!isTCC && ag.status === 'PENDENTE_GESTOR' && (
             <div style={{
               padding: '10px 12px', borderRadius: 10, marginTop: 4,
               background: '#FFF7E0', color: '#7A5B00',
@@ -237,7 +240,7 @@ function AgItem({ ag, onCancel, isMentor, isProfessor, onVerDetalhes }: { ag: an
             </div>
           )}
 
-          {ag.instrucoes_gestor && (
+          {!isTCC && ag.instrucoes_gestor && (
             <div style={{
               marginTop: 10, padding: '8px 10px', borderRadius: 10,
               background: 'var(--primary-light)', color: 'var(--primary-dark)',
@@ -252,27 +255,36 @@ function AgItem({ ag, onCancel, isMentor, isProfessor, onVerDetalhes }: { ag: an
             </div>
           )}
 
-          {isAg && otherPerson?.telefone && (
+          {!isTCC && isAg && otherPerson?.telefone && (
             <div style={{ marginTop: 10 }}>
               <WhatsAppButton phone={otherPerson.telefone} name={otherName}/>
             </div>
           )}
 
-          {ag.card?.categoria === 'TCC' && !['CANCELADO'].includes(ag.status) && (
-            <button onClick={() => onVerDetalhes(ag.id)} style={{
-              marginTop: 10, padding: '8px 14px', borderRadius: 10,
-              border: '1.5px solid var(--primary)', background: 'var(--primary-light)', cursor: 'pointer',
-              fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--primary-dark)', fontWeight: 600,
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-              </svg>
-              Ver detalhes e chat
-            </button>
-          )}
-
-          {['PENDENTE_GESTOR', 'AGENDADO'].includes(ag.status) && ag.card?.categoria !== 'TCC' && (
+          {isTCC && !['CANCELADO'].includes(ag.status) ? (
+            <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button onClick={() => onVerDetalhes(ag.id)} style={{
+                flex: 1, padding: '8px 14px', borderRadius: 10,
+                border: '1.5px solid var(--primary)', background: 'var(--primary-light)', cursor: 'pointer',
+                fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--primary-dark)', fontWeight: 600,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                </svg>
+                Ver detalhes e chat
+              </button>
+              {['PENDENTE_GESTOR', 'AGENDADO'].includes(ag.status) && (
+                <button onClick={() => onCancel(ag.id)} style={{
+                  flexShrink: 0, padding: '8px 12px', borderRadius: 10,
+                  border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
+                  fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--accent)',
+                }}>
+                  Cancelar
+                </button>
+              )}
+            </div>
+          ) : !isTCC && ['PENDENTE_GESTOR', 'AGENDADO'].includes(ag.status) ? (
             <button onClick={() => onCancel(ag.id)} style={{
               marginTop: 10, padding: '8px 14px', borderRadius: 10,
               border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
@@ -280,17 +292,7 @@ function AgItem({ ag, onCancel, isMentor, isProfessor, onVerDetalhes }: { ag: an
             }}>
               Cancelar
             </button>
-          )}
-
-          {['PENDENTE_GESTOR', 'AGENDADO'].includes(ag.status) && ag.card?.categoria === 'TCC' && (
-            <button onClick={() => onCancel(ag.id)} style={{
-              marginTop: 6, padding: '8px 14px', borderRadius: 10,
-              border: '1px solid var(--border)', background: '#fff', cursor: 'pointer',
-              fontFamily: 'var(--f-body)', fontSize: 12, color: 'var(--accent)',
-            }}>
-              Cancelar
-            </button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -332,8 +334,14 @@ export const AgendamentosPage: React.FC = () => {
     navigate(`${prefix}/orientacao/${id}`);
   };
 
-  const live      = agendamentos.filter((a) => a.status === 'EM_ANDAMENTO');
-  const agendados = agendamentos.filter((a) => ['AGENDADO', 'PENDENTE_GESTOR'].includes(a.status));
+  // TCC AGENDADO are ongoing by nature — show in the live section for all roles
+  const live = agendamentos.filter((a) =>
+    a.status === 'EM_ANDAMENTO' ||
+    (a.status === 'AGENDADO' && a.card?.categoria === 'TCC'),
+  );
+  const agendados = agendamentos.filter((a) =>
+    ['AGENDADO', 'PENDENTE_GESTOR'].includes(a.status) && a.card?.categoria !== 'TCC',
+  );
   // Aluno consulta o histórico em /aluno/historico; mentores e gestor ainda veem aqui
   const hist      = isMentor
     ? agendamentos.filter((a) => a.status === 'CONCLUIDO')
@@ -343,7 +351,7 @@ export const AgendamentosPage: React.FC = () => {
         .sort((a, b) => new Date(b.data || 0).getTime() - new Date(a.data || 0).getTime())
     : [];
 
-  const nextSession = live[0] || agendados[0];
+  const nextSession = !isProfessor ? (live[0] || agendados[0]) : null;
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 820 }}>
@@ -393,9 +401,9 @@ export const AgendamentosPage: React.FC = () => {
             </div>
           )}
 
-          <ViewToggle view={view} onChange={setView}/>
+          {!isProfessor && <ViewToggle view={view} onChange={setView}/>}
 
-          {view === 'calendario' ? (
+          {!isProfessor && view === 'calendario' ? (
             <CalendarView items={agendamentos.filter((a) => a.status !== 'CANCELADO')}/>
           ) : (
             <>
@@ -445,7 +453,7 @@ export const AgendamentosPage: React.FC = () => {
                     }}
                   >
                     <p className="mx-caption" style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--accent-dark)', margin: 0 }}>
-                      Cancelados \u00b7 {cancelados.length}
+                      {'Cancelados \u00b7 '}{cancelados.length}
                     </p>
                     <svg
                       width="14" height="14" viewBox="0 0 24 24" fill="none"
