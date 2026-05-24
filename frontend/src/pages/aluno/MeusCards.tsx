@@ -312,7 +312,7 @@ function CardAluno({ card, onCancel, onEdit, propostas, onAceitarProposta, onRec
                 <circle cx="12" cy="12" r="9" stroke="#E0A800" strokeWidth="2"/>
                 <path d="M12 7v5l3 2" stroke="#E0A800" strokeWidth="2" strokeLinecap="round"/>
               </svg>
-              Mentor escolheu o slot — aguardando gestor confirmar a sala.
+              Mentor escolheu a sala — aguardando gestor confirmar.
             </div>
           )}
 
@@ -369,7 +369,7 @@ function CardAluno({ card, onCancel, onEdit, propostas, onAceitarProposta, onRec
           {isDone && (
             <div style={{ marginTop: 4 }}>
               {checkinData && <CheckInOutCard c={checkinData}/>}
-              <Link to="/aluno/avaliar" style={{
+              <Link to="/aluno/historico" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginTop: 10, padding: '11px 14px', borderRadius: 12,
                 background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',

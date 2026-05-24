@@ -126,7 +126,7 @@ export const AvailabilityGrid: React.FC<AvailabilityGridProps> = ({ value, onCha
       {value.length > 0 && (
         <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 10, background: 'var(--primary-light)' }}>
           <span style={{ fontSize: 12, color: 'var(--primary-dark)', fontWeight: 500 }}>
-            <strong>{value.length}</strong> slot{value.length !== 1 ? 's' : ''} selecionado{value.length !== 1 ? 's' : ''}
+            <strong>{value.length}</strong> sala{value.length !== 1 ? 's' : ''} selecionada{value.length !== 1 ? 's' : ''}
           </span>
           {!readonly && (
             <button type="button" onClick={() => onChange([])} style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--primary)', fontSize: 12, fontWeight: 500 }}>
