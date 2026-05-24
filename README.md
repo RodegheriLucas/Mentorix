@@ -86,4 +86,4 @@
 
 ### 7.1. Como será a estratégia de apresentação de vocês na segunda-feira?
 
-> **Descrição:** (Quem vai falar? Vocês pretendem abrir o sistema ao vivo ou vão usar prints/vídeos gravados nas telas dos slides?)
+> Uma pessoa irá apresentar o projeto enquanto irá passar a apresentação, o foco principal será um video demonstrando o uso do sistema. Deixaremos o notebook com a aplicação rodando em localhost disponivel para aqueles que queiram testar o sistema.
