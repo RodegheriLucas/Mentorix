@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../config/api';
@@ -39,7 +40,7 @@ export const MentorDashboard: React.FC = () => {
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 900 }}>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 4 }}>Olá, {user?.nome?.split(' ')[0]}!</h1>
+        <PageHeader title={`Olá, ${user?.nome?.split(' ')[0]}!`} />
         <p style={{ color: 'var(--color-text-secondary)' }}>Bem-vindo ao seu painel de {panelLabel}.</p>
       </div>
 

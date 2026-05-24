@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { DatePicker } from '../../components/ui/DatePicker';
 import api from '../../config/api';
 
@@ -287,13 +288,10 @@ export const NovoCard: React.FC = () => {
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 720 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 className="mx-h1" style={{ fontSize: 26 }}>{isEdit ? 'Editar solicitação' : 'Nova solicitação'}</h1>
-        <p className="mx-caption" style={{ marginTop: 4 }}>
-          {isEdit ? 'Atualize os detalhes da sua necessidade acadêmica.' : 'Descreva sua necessidade acadêmica.'}
-        </p>
-      </div>
+      <PageHeader 
+        title={isEdit ? 'Editar solicitação' : 'Nova solicitação'}
+        subtitle={isEdit ? 'Atualize os detalhes da sua necessidade acadêmica.' : 'Descreva sua necessidade acadêmica.'}
+      />
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div className="mx-card" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 18 }}>

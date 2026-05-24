@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FaFire } from "react-icons/fa6";
 import api from '../../config/api';
 import { Avatar, MxLogo, TopicBadge } from '../../components/ui/DesignSystem';

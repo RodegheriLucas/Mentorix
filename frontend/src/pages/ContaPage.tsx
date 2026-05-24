@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MxLogo } from '../components/ui/DesignSystem';
+import { MxLogo, Avatar } from '../components/ui/DesignSystem';
 import { Skeleton } from '../components/ui/Skeleton';
 import api from '../config/api';
 
@@ -74,15 +74,16 @@ export const ContaPage: React.FC = () => {
   const [horasData, setHorasData] = useState<HorasData | null>(null);
   const [loadingHoras, setLoadingHoras] = useState(false);
 
-  const isMentor = user?.papel === 'ALUNO_MENTOR';
+  const isMentor = user?.papel === 'ALUNO_MENTOR' || user?.papel === 'PROFESSOR_MENTOR';
+  const showHoras = user?.papel === 'ALUNO_MENTOR';
 
   useEffect(() => {
-    if (!isMentor) return;
+    if (!showHoras) return;
     setLoadingHoras(true);
     api.get('/users/me/horas')
       .then((r) => setHorasData(r.data))
       .finally(() => setLoadingHoras(false));
-  }, [isMentor]);
+  }, [showHoras]);
 
   if (!user) return null;
 
@@ -105,7 +106,7 @@ export const ContaPage: React.FC = () => {
       <div style={{ padding: '12px 0 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <MxLogo size={20} />
+            <MxLogo size={20}/>
             <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 16, letterSpacing: -0.2, color: 'var(--primary-dark)' }}>
               mentorix
             </span>
@@ -126,8 +127,8 @@ export const ContaPage: React.FC = () => {
       }}>
         <div style={{
           height: 80,
-          background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
-        }} />
+          background: `linear-gradient(135deg, var(--primary-dark), var(--primary))`,
+        }}/>
         <div style={{ background: '#fff', padding: '0 16px 20px', position: 'relative' }}>
           <div style={{
             position: 'absolute', top: -28, left: 16,
@@ -143,6 +144,14 @@ export const ContaPage: React.FC = () => {
               {user.nome}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 2 }}>{user.email}</div>
+            {user.telefone && (
+              <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.37 18 19.45 19.45 0 0 1 3 9.63 19.79 19.79 0 0 1 .08 1.04 2 2 0 0 1 2.06 0h3a2 2 0 0 1 2 1.72c.13 1 .38 1.97.73 2.9a2 2 0 0 1-.45 2.11L6.09 7.91A16 16 0 0 0 12 13.82l1.27-1.27a2 2 0 0 1 2.11-.45c.93.35 1.9.6 2.9.73A2 2 0 0 1 20 15z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                {user.telefone}
+              </div>
+            )}
             <div style={{ marginTop: 8 }}>
               <span style={{
                 display: 'inline-block',
@@ -159,6 +168,7 @@ export const ContaPage: React.FC = () => {
       {isMentor && (
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
           {/* Horas acumuladas */}
+          {showHoras && (
           <div style={{
             flex: 1, padding: '16px', borderRadius: 14,
             background: 'linear-gradient(135deg, var(--secondary-light), #d4edda)',
@@ -167,8 +177,8 @@ export const ContaPage: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="var(--secondary)" strokeWidth="1.8" />
-                <path d="M12 7v5l3 2" stroke="var(--secondary)" strokeWidth="1.8" strokeLinecap="round" />
+                <circle cx="12" cy="12" r="9" stroke="var(--secondary)" strokeWidth="1.8"/>
+                <path d="M12 7v5l3 2" stroke="var(--secondary)" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
               <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--secondary-dark)' }}>
                 Horas acumuladas
@@ -181,7 +191,9 @@ export const ContaPage: React.FC = () => {
             <div style={{ fontSize: 11, color: 'var(--secondary-dark)', marginTop: 2 }}>
               {loadingHoras ? '' : `${sessoes.length} sess${sessoes.length === 1 ? 'ão' : 'ões'} concluída${sessoes.length === 1 ? '' : 's'}`}
             </div>
+            <div className="mx-caption" style={{ fontSize: 11, marginTop: 2 }}>{'Compet\u00eancias'}</div>
           </div>
+          )}
 
           {/* Competências */}
           <div style={{
@@ -192,7 +204,7 @@ export const ContaPage: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" stroke="var(--primary)" strokeWidth="1.8" strokeLinejoin="round" />
+                <path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" stroke="var(--primary)" strokeWidth="1.8" strokeLinejoin="round"/>
               </svg>
               <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--primary-dark)' }}>
                 Competências
@@ -209,11 +221,12 @@ export const ContaPage: React.FC = () => {
       )}
 
       {/* Histórico de horas — só para mentores */}
-      {isMentor && (
+      {showHoras && (
         <div style={{
           borderRadius: 14, background: '#fff',
           border: '1px solid var(--border)', marginBottom: 16, overflow: 'hidden',
         }}>
+          {/* Cabeçalho da seção */}
           <div style={{
             padding: '14px 16px 12px',
             borderBottom: '1px solid var(--border)',
@@ -226,8 +239,8 @@ export const ContaPage: React.FC = () => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" stroke="var(--secondary)" strokeWidth="1.8" />
-                  <path d="M12 7v5l3 2" stroke="var(--secondary)" strokeWidth="1.8" strokeLinecap="round" />
+                  <circle cx="12" cy="12" r="9" stroke="var(--secondary)" strokeWidth="1.8"/>
+                  <path d="M12 7v5l3 2" stroke="var(--secondary)" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
               </div>
               <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>
@@ -245,15 +258,16 @@ export const ContaPage: React.FC = () => {
             )}
           </div>
 
+          {/* Lista de sessões */}
           {loadingHoras ? (
             <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[1, 2, 3].map((i) => <Skeleton key={i} height={64} />)}
+              {[1, 2, 3].map((i) => <Skeleton key={i} height={64}/>)}
             </div>
           ) : sessoes.length === 0 ? (
             <div style={{ padding: '32px 16px', textAlign: 'center' }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 10px', display: 'block' }}>
-                <circle cx="12" cy="12" r="9" stroke="var(--text-3)" strokeWidth="1.5" />
-                <path d="M12 7v5l3 2" stroke="var(--text-3)" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="12" cy="12" r="9" stroke="var(--text-3)" strokeWidth="1.5"/>
+                <path d="M12 7v5l3 2" stroke="var(--text-3)" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
               <p style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 500 }}>Nenhuma hora consolidada ainda</p>
               <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
@@ -268,6 +282,7 @@ export const ContaPage: React.FC = () => {
                   borderBottom: i < sessoes.length - 1 ? '1px solid var(--border)' : 'none',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
+                  {/* Badge de duração */}
                   <div style={{
                     width: 48, height: 48, borderRadius: 12, flexShrink: 0,
                     background: 'var(--secondary-light)',
@@ -283,6 +298,8 @@ export const ContaPage: React.FC = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Informações da sessão */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 13, color: 'var(--text)', lineHeight: 1.3, marginBottom: 3 }}>
                       {s.card_titulo || 'Mentoria'}
@@ -290,8 +307,8 @@ export const ContaPage: React.FC = () => {
                     <div style={{ fontSize: 11, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8" />
-                          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                          <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8"/>
+                          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
                         </svg>
                         {s.aluno_nome.split(' ')[0] || 'Aluno'}
                       </span>
@@ -299,6 +316,8 @@ export const ContaPage: React.FC = () => {
                       <span>{s.hora_inicio} – {s.hora_fim}</span>
                     </div>
                   </div>
+
+                  {/* Data */}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontSize: 10, color: 'var(--text-3)', fontWeight: 500, lineHeight: 1.4 }}>
                       {fmtDate(s.data).split(',')[0]}
@@ -314,8 +333,9 @@ export const ContaPage: React.FC = () => {
         </div>
       )}
 
+
       {/* Competências */}
-      {user.papel !== 'PROFESSOR_MENTOR' && user.tags_competencia && user.tags_competencia.length > 0 && (
+      {user.tags_competencia && user.tags_competencia.length > 0 && (
         <div style={{
           padding: '14px 16px', borderRadius: 14,
           background: '#fff', border: '1px solid var(--border)',
@@ -337,26 +357,6 @@ export const ContaPage: React.FC = () => {
         </div>
       )}
 
-      {/* Telefone */}
-      {user.telefone && (
-        <div style={{
-          padding: '14px 16px', borderRadius: 14,
-          background: '#fff', border: '1px solid var(--border)',
-          marginBottom: 16,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <div>
-            <div className="mx-caption" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
-              Telefone
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', marginTop: 3 }}>{user.telefone}</div>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.37 18 19.45 19.45 0 0 1 3 9.63 19.79 19.79 0 0 1 .08 1.04 2 2 0 0 1 2.06 0h3a2 2 0 0 1 2 1.72c.13 1 .38 1.97.73 2.9a2 2 0 0 1-.45 2.11L6.09 7.91A16 16 0 0 0 12 13.82l1.27-1.27a2 2 0 0 1 2.11-.45c.93.35 1.9.6 2.9.73A2 2 0 0 1 20 15z"
-              stroke="var(--text-3)" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-        </div>
-      )}
 
       {/* Logout */}
       <button onClick={handleLogout} style={{
@@ -371,14 +371,14 @@ export const ContaPage: React.FC = () => {
       }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
-            stroke="var(--accent-dark)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            stroke="var(--accent-dark)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
         Sair da conta
       </button>
 
-      <div style={{ height: 8 }} />
+      <div style={{ height: 8 }}/>
       <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--f-body)' }}>
-        mentorix · acesso restrito à instituição
+        {'mentorix \u00b7 acesso restrito \u00e0 institui\u00e7\u00e3o'}
       </p>
     </div>
   );

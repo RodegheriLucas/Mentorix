@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { PageHeader } from '../../components/ui/PageHeader';
 import api from '../../config/api';
 
 interface Stats {
@@ -75,14 +76,11 @@ export const GestorDashboard: React.FC = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'var(--f-head)', fontSize: 24, fontWeight: 700, color: 'var(--text)', margin: 0, letterSpacing: -0.5 }}>
-          Olá, {firstName}.
-        </h1>
-        <p style={{ fontFamily: 'var(--f-body)', fontSize: 14, color: 'var(--text-2)', margin: '4px 0 0' }}>
-          Painel administrativo — {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-        </p>
-      </div>
+      <PageHeader
+        title={`Olá, ${firstName}.`}
+        subtitle={`Painel administrativo — ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}`}
+        showAvatar
+      />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
         {cards.map((c) => (

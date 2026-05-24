@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import { StatusPill, Avatar, TopicBadge, MxLogo } from '../../components/ui/DesignSystem';
@@ -58,7 +59,10 @@ function initials(name: string) {
 }
 
 function formatDate(dateStr: string): string {
-  const [year, month, day] = dateStr.split('-');
+  if (!dateStr) return '';
+  const isoDate = dateStr.split('T')[0];
+  const [year, month, day] = isoDate.split('-');
+  if (!year || !month || !day) return 'Data Inválida';
   return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('pt-BR', {
     weekday: 'long', day: '2-digit', month: 'long',
   });
@@ -95,7 +99,6 @@ function HistoricoHeader({ nome, email }: { nome: string; email: string }) {
             padding: '2px 6px', borderRadius: 6,
           }}>Aluno</span>
         </div>
-        <Avatar initials={ini} size={32} color={mentorGradient(nome)} />
       </div>
       <h1 className="mx-h1" style={{ fontSize: 24 }}>Histórico</h1>
       <p className="mx-caption" style={{ marginTop: 2 }}>{email}</p>
@@ -141,14 +144,14 @@ function CardPendente({ item, isOpen, onToggle, nota, depoimento, submitting, er
             )}
           </div>
 
+          {item.card_tags?.length > 0 && (
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
+              {item.card_tags.map((t) => <TopicBadge key={t} tone="gray">#{t}</TopicBadge>)}
+            </div>
+          )}
+
           {isOpen && (
             <div style={{ marginTop: 14 }}>
-              {item.card_tags?.length > 0 && (
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
-                  {item.card_tags.map((t) => <TopicBadge key={t} tone="gray">#{t}</TopicBadge>)}
-                </div>
-              )}
-
               <div style={{
                 padding: 10, borderRadius: 12, background: 'var(--primary-light)',
                 display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
@@ -261,13 +264,14 @@ function CardAvaliado({ item, isOpen, onToggle }: { item: AvaliacaoHistorico; is
             </div>
           </div>
 
+          {item.card_tags?.length > 0 && (
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
+              {item.card_tags.map((t) => <TopicBadge key={t} tone="gray">#{t}</TopicBadge>)}
+            </div>
+          )}
+
           {isOpen && (
             <div style={{ marginTop: 14 }}>
-              {item.card_tags?.length > 0 && (
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
-                  {item.card_tags.map((t) => <TopicBadge key={t} tone="gray">#{t}</TopicBadge>)}
-                </div>
-              )}
 
               <div style={{
                 padding: 10, borderRadius: 12, background: 'var(--secondary-light)',

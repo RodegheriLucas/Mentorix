@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import { Avatar } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 const AVATAR_GRADIENTS = [
   'linear-gradient(135deg,#6f5ad0,#4632a0)',
@@ -71,18 +72,11 @@ export const ProfessorHistorico: React.FC = () => {
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 560, margin: '0 auto' }}>
 
-      {/* Cabeçalho */}
-      <div style={{ marginBottom: 22 }}>
-        <h1 style={{
-          fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 26,
-          color: 'var(--text)', margin: 0, letterSpacing: -0.5,
-        }}>
-          Histórico
-        </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>
-          Orientações concluídas
-        </p>
-      </div>
+      <PageHeader 
+        title="Histórico"
+        subtitle="Orientações concluídas"
+        showAvatar
+      />
 
       {/* Contador */}
       {!loading && (

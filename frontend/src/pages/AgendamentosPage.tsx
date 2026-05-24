@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageHeader } from '../components/ui/PageHeader';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/api';
 import { StatusPill, Avatar, CheckInOutCard, WhatsAppButton } from '../components/ui/DesignSystem';
@@ -364,17 +365,10 @@ export const AgendamentosPage: React.FC = () => {
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 820 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <p className="mx-caption" style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: 1,
-          textTransform: 'uppercase', color: 'var(--primary)', marginBottom: 4,
-        }}>{pageLabel + ' \u00b7 ' + pageSection}</p>
-        <h1 className="mx-h1" style={{ fontSize: 26 }}>{pageTitle}</h1>
-        <p className="mx-caption" style={{ marginTop: 4 }}>
-          {agendamentos.filter((a) => !['CONCLUIDO', 'CANCELADO'].includes(a.status)).length} ativa(s) esta semana
-        </p>
-      </div>
+      <PageHeader 
+        title={pageTitle}
+        subtitle={`${agendamentos.filter((a) => !['CONCLUIDO', 'CANCELADO'].includes(a.status)).length} ativa(s) esta semana`}        
+      />
 
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

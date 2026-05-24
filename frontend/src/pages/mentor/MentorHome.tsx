@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../config/api';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 const STATUS_LABEL: Record<string, string> = {
   PENDENTE_GESTOR: 'Pendente',
@@ -317,18 +318,10 @@ export const MentorHome: React.FC = () => {
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 560, margin: '0 auto' }}>
 
-      {/* Saudação */}
-      <div style={{ marginBottom: 22 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: 0.8, margin: '0 0 4px' }}>
-          {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-        </p>
-        <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 26, color: 'var(--text)', margin: 0, letterSpacing: -0.5 }}>
-          Olá, {firstName}!
-        </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 4 }}>
-          {isProfessor ? 'Painel do orientador' : 'Painel do mentor'}
-        </p>
-      </div>
+      <PageHeader 
+        title={`Olá, ${firstName}!`}
+        subtitle={isProfessor ? 'Painel do orientador' : 'Painel do mentor'}
+      />
 
       {/* Stats */}
       {loading ? (

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
-import { MxFileInput, MxLogo, Avatar } from '../../components/ui/DesignSystem';
+import { MxFileInput } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 function initials(name: string) {
   return name?.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '??';
@@ -112,26 +113,10 @@ export const AbrirContestacao: React.FC = () => {
 
   return (
     <div className="animate-fadeIn">
-      {/* Header */}
-      <div style={{ padding: '12px 0 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <MxLogo size={20} />
-            <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 16, letterSpacing: -0.2, color: 'var(--primary-dark)' }}>
-              mentorix
-            </span>
-            <span style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase',
-              color: 'var(--primary-dark)', background: 'var(--primary-light)',
-              padding: '2px 6px', borderRadius: 6,
-            }}>Mentor</span>
-          </div>
-        </div>
-        <h1 className="mx-h1" style={{ fontSize: 22 }}>Abrir Contestação</h1>
-        <p className="mx-caption" style={{ marginTop: 2, lineHeight: 1.4 }}>
-          Use quando o aluno não avaliar em até 24h após o encontro.
-        </p>
-      </div>
+      <PageHeader 
+        title="Abrir Contestação"
+        subtitle="Use quando o aluno não avaliar em até 24h após o encontro."
+      />
 
       {agendamentos.length === 0 ? (
         <div className="mx-card" style={{ padding: 36, textAlign: 'center', color: 'var(--text-3)' }}>
