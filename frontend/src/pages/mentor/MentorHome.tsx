@@ -62,7 +62,7 @@ function StatCard({ label, value, color, bg, icon }: {
 }
 
 // ── MentorCalendar ────────────────────────────────────────────
-function MentorCalendar({ agendamentos, loading }: { agendamentos: any[]; loading: boolean }) {
+function MentorCalendar({ agendamentos, loading, isProfessor }: { agendamentos: any[]; loading: boolean; isProfessor: boolean }) {
   const today = todayIso();
   const [calYear,     setCalYear]     = useState(() => new Date().getFullYear());
   const [calMonth,    setCalMonth]    = useState(() => new Date().getMonth());
@@ -239,7 +239,7 @@ function MentorCalendar({ agendamentos, loading }: { agendamentos: any[]; loadin
             {fmtDate(selectedDay)}
           </div>
           {selectedAgs.length === 0 ? (
-            <p style={{ fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>Nenhuma mentoria ativa neste dia.</p>
+            <p style={{ fontSize: 13, color: 'var(--text-3)', textAlign: 'center' }}>Nenhuma {isProfessor ? 'orientação' : 'mentoria'} ativa neste dia.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {selectedAgs.map((ag: any) => (
@@ -257,7 +257,7 @@ function MentorCalendar({ agendamentos, loading }: { agendamentos: any[]; loadin
                       fontFamily: 'var(--f-head)', fontWeight: 600, fontSize: 13,
                       color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
-                      {ag.card?.titulo || 'Mentoria'}
+                      {ag.card?.titulo || (isProfessor ? 'Orientação' : 'Mentoria')}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3 }}>
                       {ag.hora_inicio}–{ag.hora_fim}
@@ -372,10 +372,10 @@ export const MentorHome: React.FC = () => {
         </div>
       )}
 
-      {/* Próximas mentorias */}
+      {/* Próximas mentorias / orientações */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 12 }}>
-          Próximas mentorias
+          {isProfessor ? 'Próximas orientações' : 'Próximas mentorias'}
         </div>
 
         {loading ? (
@@ -387,7 +387,7 @@ export const MentorHome: React.FC = () => {
             padding: '28px 20px', textAlign: 'center',
             border: '1.5px dashed var(--border)', borderRadius: 14, background: '#fff',
           }}>
-            <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>Nenhuma mentoria agendada</p>
+            <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>Nenhuma {isProfessor ? 'orientação' : 'mentoria'} agendada</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -412,7 +412,7 @@ export const MentorHome: React.FC = () => {
                     fontFamily: 'var(--f-head)', fontWeight: 600, fontSize: 13,
                     color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
-                    {ag.card?.titulo || 'Mentoria'}
+                    {ag.card?.titulo || (isProfessor ? 'Orientação' : 'Mentoria')}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
                     {fmtDate(ag.data)} · {ag.hora_inicio}–{ag.hora_fim}
@@ -438,12 +438,12 @@ export const MentorHome: React.FC = () => {
       {/* Calendário */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 14 }}>
-          Calendário de mentorias
+          {isProfessor ? 'Calendário de orientações' : 'Calendário de mentorias'}
         </div>
         {loading ? (
           <Skeleton height={260}/>
         ) : (
-          <MentorCalendar agendamentos={agendamentos} loading={loading}/>
+          <MentorCalendar agendamentos={agendamentos} loading={loading} isProfessor={isProfessor}/>
         )}
       </div>
 
