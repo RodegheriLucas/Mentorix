@@ -59,62 +59,71 @@ interface SlotModalProps {
 }
 
 function SlotModal({ card, slots, loading, selectedSlot, onSelectSlot, onConfirm, onClose, confirming }: SlotModalProps) {
-  return (
-    <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'rgba(18,18,18,0.5)',
-      backdropFilter: 'blur(6px)', display: 'flex',
-      alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000,
-    }}>
-      <div onClick={(e) => e.stopPropagation()} style={{
-        width: '100%', maxWidth: 402,
-        background: '#fff', borderRadius: '24px 24px 0 0',
-        padding: '20px 20px 32px',
-        boxShadow: '0 -8px 40px rgba(0,0,0,0.2)',
-        maxHeight: 680, overflowY: 'auto',
-      }}>
-        <div style={{ width: 36, height: 4, borderRadius: 99, background: 'var(--border)', margin: '0 auto 18px' }} />
-        <p className="mx-caption" style={{ textTransform: 'uppercase', fontSize: 9, fontWeight: 700, letterSpacing: 1, color: 'var(--primary)', marginBottom: 4 }}>
-          Aceitar mentoria
-        </p>
-        <h2 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 17, lineHeight: 1.25, color: 'var(--text)', marginBottom: 3 }}>
-          {card?.titulo}
-        </h2>
-        <p className="mx-caption" style={{ marginBottom: 18, fontSize: 12 }}>por {card?.aluno?.nome}</p>
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[1, 2, 3].map((i) => <Skeleton key={i} height={56} />)}
-          </div>
-        ) : slots.length === 0 ? (
-          <p style={{ color: 'var(--text-3)', textAlign: 'center', padding: '20px 0', fontSize: 13 }}>Nenhuma sala disponível no momento.</p>
-        ) : (
-          <>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Horários compatíveis</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-              {slots.map((slot, i) => {
-                const on = selectedSlot === slot;
-                return (
-                  <button key={i} onClick={() => onSelectSlot(slot)} style={{ textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer', border: on ? '2px solid var(--primary)' : '1px solid var(--border)', background: on ? 'var(--primary-light)' : '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, border: on ? '5px solid var(--primary)' : '2px solid var(--border)', background: '#fff' }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
-                        {slot.data ? new Date(slot.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {slot.hora_inicio} – {slot.hora_fim}
-                      </div>
-                      <div className="mx-caption" style={{ fontSize: 11 }}>{slot.ambiente?.nome}{slot.ambiente?.bloco ? ` · ${slot.ambiente.bloco}` : ''}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <button onClick={onConfirm} disabled={!selectedSlot || confirming} style={{ width: '100%', padding: '14px 0', borderRadius: 12, border: 0, cursor: (!selectedSlot || confirming) ? 'not-allowed' : 'pointer', background: (!selectedSlot || confirming) ? 'rgba(93,70,184,0.4)' : 'linear-gradient(135deg, #5D46B8, #3A2885)', color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 14, boxShadow: (!selectedSlot || confirming) ? 'none' : '0 4px 14px rgba(93,70,184,0.35)' }}>
-              {confirming ? 'Confirmando…' : 'Aceitar mentoria'}
-            </button>
-          </>
-        )}
-        <button onClick={onClose} style={{ width: '100%', marginTop: 10, padding: '12px 0', borderRadius: 12, border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontFamily: 'var(--f-body)', fontWeight: 500, fontSize: 14, color: 'var(--text-2)' }}>Cancelar</button>
-      </div>
-    </div>
-  );
+  React.useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: '#fff',
+      zIndex: 1000, display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{
+        width: '100%', height: '100%',
+        padding: '20px 20px 32px',
+        overflowY: 'auto', boxSizing: 'border-box',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-2)' }}>
+            <svg width='20' height='20' viewBox='0 0 24 24' fill='none'>
+              <path d='M18 6L6 18M6 6l12 12' stroke='currentColor' strokeWidth='2' strokeLinecap='round'/>
+            </svg>
+          </button>
+        </div>
+        <p className="mx-caption" style={{ textTransform: 'uppercase', fontSize: 9, fontWeight: 700, letterSpacing: 1, color: 'var(--primary)', marginBottom: 4 }}>
+          Aceitar mentoria
+        </p>
+        <h2 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 17, lineHeight: 1.25, color: 'var(--text)', marginBottom: 3 }}>
+          {card?.titulo}
+        </h2>
+        <p className="mx-caption" style={{ marginBottom: 18, fontSize: 12 }}>por {card?.aluno?.nome}</p>
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[1, 2, 3].map((i) => <Skeleton key={i} height={56} />)}
+          </div>
+        ) : slots.length === 0 ? (
+          <p style={{ color: 'var(--text-3)', textAlign: 'center', padding: '20px 0', fontSize: 13 }}>Nenhuma sala disponível no momento.</p>
+        ) : (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Horários compatíveis</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+              {slots.map((slot, i) => {
+                const on = selectedSlot === slot;
+                return (
+                  <button key={i} onClick={() => onSelectSlot(slot)} style={{ textAlign: 'left', padding: '12px 14px', borderRadius: 12, cursor: 'pointer', border: on ? '2px solid var(--primary)' : '1px solid var(--border)', background: on ? 'var(--primary-light)' : '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, border: on ? '5px solid var(--primary)' : '2px solid var(--border)', background: '#fff' }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>
+                        {slot.data ? new Date(slot.data + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }) : ''} · {slot.hora_inicio} – {slot.hora_fim}
+                      </div>
+                      <div className="mx-caption" style={{ fontSize: 11 }}>{slot.ambiente?.nome}{slot.ambiente?.bloco ? ` · ${slot.ambiente.bloco}` : ''}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={onConfirm} disabled={!selectedSlot || confirming} style={{ width: '100%', padding: '14px 0', borderRadius: 12, border: 0, cursor: (!selectedSlot || confirming) ? 'not-allowed' : 'pointer', background: (!selectedSlot || confirming) ? 'rgba(93,70,184,0.4)' : 'linear-gradient(135deg, #5D46B8, #3A2885)', color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 14, boxShadow: (!selectedSlot || confirming) ? 'none' : '0 4px 14px rgba(93,70,184,0.35)' }}>
+              {confirming ? 'Confirmando…' : 'Aceitar mentoria'}
+            </button>
+          </>
+        )}
+        <button onClick={onClose} style={{ width: '100%', marginTop: 10, padding: '12px 0', borderRadius: 12, border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontFamily: 'var(--f-body)', fontWeight: 500, fontSize: 14, color: 'var(--text-2)' }}>Cancelar</button>
+      </div>
+    </div>
+  );
 }
+
+
 
 // ─── ContraProposta Modal ─────────────────────────────────────────────────────
 function ContraPropostaModal({ card, onClose, onSent }: { card: any; onClose: () => void; onSent: (cardId: number) => void }) {
@@ -565,21 +574,26 @@ export const FeedMentoria: React.FC = () => {
   useEffect(() => {
     api.get('/feed')
       .then((r) => {
-        if (isTCC) setTccItems(r.data);
+        if (isTCC) setTccItems([...r.data].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()));
         else setCards(r.data);
       })
       .finally(() => setLoading(false));
   }, [isTCC]);
 
-  const filteredCards = useMemo(() => {
-    if (!mentorTopics.length) return cards;
-    return cards
-      .filter((card) => {
-        const cardTopics: string[] = card.tags || [];
-        return cardTopics.some((t) => mentorTopics.includes(t));
-      })
-      .sort((a, b) => matchRatio(mentorTopics, b.tags || []) - matchRatio(mentorTopics, a.tags || []));
-  }, [cards, mentorTopics]);
+  const filteredCards = useMemo(() => {
+    const byDate = (a: any, b: any) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime();
+    const base = [...cards].sort(byDate);
+    if (!mentorTopics.length) return base;
+    return base
+      .filter((card) => {
+        const cardTopics: string[] = card.tags || [];
+        return cardTopics.some((t) => mentorTopics.includes(t));
+      })
+      .sort((a, b) => {
+        const diff = matchRatio(mentorTopics, b.tags || []) - matchRatio(mentorTopics, a.tags || []);
+        return diff !== 0 ? diff : byDate(a, b);
+      });
+  }, [cards, mentorTopics]);
 
   const openAccept = async (card: any) => {
     setSelectedCard(card);

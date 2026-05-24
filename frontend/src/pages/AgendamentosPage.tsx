@@ -278,6 +278,7 @@ export const AgendamentosPage: React.FC = () => {
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('lista');
+  const [canceladosOpen, setCanceladosOpen] = useState(false);
 
   const isMentor = ['ALUNO_MENTOR', 'PROFESSOR_MENTOR'].includes(user?.papel ?? '');
   const isProfessor = user?.papel === 'PROFESSOR_MENTOR';
@@ -304,7 +305,11 @@ export const AgendamentosPage: React.FC = () => {
   const agendados = agendamentos.filter((a) => ['AGENDADO', 'PENDENTE_GESTOR'].includes(a.status));
   // Aluno consulta o histórico em /aluno/historico; mentores e gestor ainda veem aqui
   const hist      = isMentor
-    ? agendamentos.filter((a) => ['CONCLUIDO', 'CANCELADO'].includes(a.status))
+    ? agendamentos.filter((a) => a.status === 'CONCLUIDO')
+    : [];
+  const cancelados = isMentor
+    ? [...agendamentos.filter((a) => a.status === 'CANCELADO')]
+        .sort((a, b) => new Date(b.data || 0).getTime() - new Date(a.data || 0).getTime())
     : [];
 
   const nextSession = live[0] || agendados[0];
@@ -389,11 +394,43 @@ export const AgendamentosPage: React.FC = () => {
               )}
 
               {hist.length > 0 && (
-                <div>
+                <div style={{ marginBottom: 12 }}>
                   <p className="mx-caption" style={{ padding: '0 0 6px', fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--text-3)' }}>
                     {'Hist\u00f3rico \u00b7 '}{hist.length}
                   </p>
                   {hist.map((ag) => <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>)}
+                </div>
+              )}
+
+              {cancelados.length > 0 && (
+                <div style={{ marginTop: 4 }}>
+                  <button
+                    type="button"
+                    onClick={() => setCanceladosOpen((o) => !o)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '8px 0 8px', background: 'none', border: 'none', cursor: 'pointer',
+                      borderTop: '1px solid var(--border)',
+                    }}
+                  >
+                    <p className="mx-caption" style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', color: 'var(--accent-dark)', margin: 0 }}>
+                      Cancelados \u00b7 {cancelados.length}
+                    </p>
+                    <svg
+                      width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      style={{ transform: canceladosOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}
+                    >
+                      <path d="M6 9l6 6 6-6" stroke="var(--accent-dark)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+
+                  {canceladosOpen && (
+                    <div style={{ marginTop: 6 }}>
+                      {cancelados.map((ag) => (
+                        <AgItem key={ag.id} ag={ag} onCancel={cancelar} isMentor={isMentor} isProfessor={isProfessor}/>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </>

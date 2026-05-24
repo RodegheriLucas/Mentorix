@@ -432,8 +432,9 @@ export const MeusCards: React.FC = () => {
   };
 
   const load = () => api.get('/cards/meus').then((r) => {
-    setCards(r.data);
-    fetchPropostas(r.data);
+    const sorted = [...r.data].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
+    setCards(sorted);
+    fetchPropostas(sorted);
   }).finally(() => setLoading(false));
 
   useEffect(() => { 

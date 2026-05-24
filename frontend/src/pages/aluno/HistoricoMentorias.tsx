@@ -414,9 +414,9 @@ export const HistoricoMentorias: React.FC = () => {
       api.get('/avaliacoes/historico'),
       api.get('/cards/meus'),
     ]).then(([p, h, c]) => {
-      setPendentes(p.data);
-      setHistorico(h.data);
-      setCards(c.data);
+      setPendentes([...p.data].sort((a, b) => new Date(b.data_encontro).getTime() - new Date(a.data_encontro).getTime()));
+      setHistorico([...h.data].sort((a, b) => new Date(b.avaliado_em).getTime() - new Date(a.avaliado_em).getTime()));
+      setCards([...c.data].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()));
     }).finally(() => setLoading(false));
   };
 
