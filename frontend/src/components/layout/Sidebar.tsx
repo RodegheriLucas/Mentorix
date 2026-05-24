@@ -48,6 +48,7 @@ const navItems: Array<NavItem & { iconId: string; }> = [
   { to: '/professor', label: 'Dashboard', iconId: 'portaria', roles: ['PROFESSOR_MENTOR'] },
   { to: '/professor/feed', label: 'Feed TCC', iconId: 'feed', roles: ['PROFESSOR_MENTOR'] },
   { to: '/professor/agendamentos', label: 'Orienta\u00e7\u00f5es', iconId: 'agenda', roles: ['PROFESSOR_MENTOR'] },
+  { to: '/professor/historico', label: 'Hist\u00f3rico', iconId: 'historico', roles: ['PROFESSOR_MENTOR'] },
   // GESTOR
   { to: '/gestor/portaria', label: 'Painel de Portaria', iconId: 'portaria', roles: ['GESTOR'] },
   { to: '/gestor/ambientes', label: 'Ambientes', iconId: 'ambientes', roles: ['GESTOR'] },

@@ -51,10 +51,11 @@ const MENTOR_TABS: TabItem[] = [
 ];
 
 const PROFESSOR_TABS: TabItem[] = [
-  { to: '/professor',              label: 'Início',    icon: 'home'   },
-  { to: '/professor/feed',         label: 'Descobrir', icon: 'feed'   },
-  { to: '/professor/agendamentos', label: 'Agenda',    icon: 'agenda' },
-  { to: '/professor/conta',        label: 'Conta',     icon: 'conta'  },
+  { to: '/professor',              label: 'Início',    icon: 'home'      },
+  { to: '/professor/agendamentos', label: 'Orient.',   icon: 'agenda'    },
+  { to: '/professor/feed',         label: 'Descobrir', icon: 'feed'      }, // index 2 = FAB
+  { to: '/professor/historico',    label: 'Histórico', icon: 'historico' },
+  { to: '/professor/conta',        label: 'Conta',     icon: 'conta'     },
 ];
 
 const GESTOR_TABS: TabItem[] = [
@@ -63,7 +64,7 @@ const GESTOR_TABS: TabItem[] = [
   { to: '/gestor/disputas',  label: 'Disputas',  icon: 'disputas'  },
 ];
 
-const FAB_INDEX: Record<string, number> = { ALUNO: 2, ALUNO_MENTOR: 2, GESTOR: 1 };
+const FAB_INDEX: Record<string, number> = { ALUNO: 2, ALUNO_MENTOR: 2, PROFESSOR_MENTOR: 2, GESTOR: 1 };
 
 export const MobileTabBar: React.FC = () => {
   const { user } = useAuth();

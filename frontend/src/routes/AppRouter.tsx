@@ -15,6 +15,7 @@ import { HistoricoMentorias } from '../pages/aluno/HistoricoMentorias';
 // Mentor / Professor
 import { MentorHome } from '../pages/mentor/MentorHome';
 import { FeedMentoria } from '../pages/mentor/FeedMentoria';
+import { ProfessorHistorico } from '../pages/professor/ProfessorHistorico';
 import { AbrirContestacao } from '../pages/mentor/AbrirContestacao';
 
 // Gestor
@@ -71,6 +72,7 @@ export const AppRouter: React.FC = () => (
         <Route path="/professor" element={<MW roles={['PROFESSOR_MENTOR']}><MentorHome /></MW>} />
         <Route path="/professor/feed" element={<MW roles={['PROFESSOR_MENTOR']}><FeedMentoria /></MW>} />
         <Route path="/professor/agendamentos" element={<MW roles={['PROFESSOR_MENTOR']}><AgendamentosPage /></MW>} />
+        <Route path="/professor/historico" element={<MW roles={['PROFESSOR_MENTOR']}><ProfessorHistorico /></MW>} />
         <Route path="/professor/conta" element={<MW roles={['PROFESSOR_MENTOR']}><ContaPage /></MW>} />
 
         <Route path="/gestor" element={<Navigate to="/gestor/portaria" replace />} />
