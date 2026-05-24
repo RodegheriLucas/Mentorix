@@ -12,8 +12,8 @@ const icn = (id: string, active: boolean) => {
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" stroke={c} strokeWidth={w}/><path d="M3 10h18" stroke={c} strokeWidth={w}/></svg>;
     case 'agenda':
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="3" stroke={c} strokeWidth={w}/><path d="M3 9h18M8 2v4M16 2v4" stroke={c} strokeWidth={w} strokeLinecap="round"/></svg>;
-    case 'avaliar':
-      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" stroke={c} strokeWidth={w} strokeLinejoin="round"/></svg>;
+    case 'historico':
+      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke={c} strokeWidth={w}/><path d="M12 7v5l3 2" stroke={c} strokeWidth={w} strokeLinecap="round"/></svg>;
     case 'feed':
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M9 3L3 5v16l6-2 6 2 6-2V3l-6 2-6-2z" stroke={c} strokeWidth={w} strokeLinejoin="round"/><path d="M9 3v16M15 5v16" stroke={c} strokeWidth={w}/></svg>;
     case 'horas':
@@ -31,15 +31,14 @@ const icn = (id: string, active: boolean) => {
 const ALUNO_TABS: TabItem[] = [
   { to: '/aluno',              label: 'Início',  icon: 'cards'   },
   { to: '/aluno/agendamentos', label: 'Agenda',  icon: 'agenda'  },
-  { to: '/aluno/novo-card',    label: 'Nova',    icon: 'nova'    }, // index 2 = FAB
-  { to: '/aluno/avaliar',      label: 'Avaliar', icon: 'avaliar' },
+  { to: '/aluno/novo-card',    label: 'Nova',     icon: 'nova'     }, // index 2 = FAB
+  { to: '/aluno/historico',    label: 'Histórico', icon: 'historico' },
   { to: '/aluno/conta',        label: 'Conta',   icon: 'conta'   },
 ];
 
 const MENTOR_TABS: TabItem[] = [
   { to: '/mentor/feed',         label: 'Descobrir', icon: 'feed'     },
   { to: '/mentor/agendamentos', label: 'Agenda',    icon: 'agenda'   },
-  { to: '/mentor/horas',        label: 'Horas',     icon: 'horas'    },
   { to: '/mentor/contestacao',  label: 'Disputa',   icon: 'disputas' },
   { to: '/mentor/conta',        label: 'Conta',     icon: 'conta'    },
 ];

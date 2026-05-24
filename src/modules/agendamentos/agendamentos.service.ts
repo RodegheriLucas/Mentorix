@@ -60,6 +60,10 @@ export class AgendamentosService {
       status: AgendamentoStatus.AGENDADO,
     });
 
+    if (a.card) {
+      await this.cardRepo.update(a.card.id, { status: CardStatus.AGENDADO });
+    }
+
     await this.auditService.log(
       gestorId, 'INSTRUCAO_GESTOR', 'agendamentos', id,
       antes, { instrucoes, status: AgendamentoStatus.AGENDADO }, ip,
@@ -84,7 +88,9 @@ export class AgendamentosService {
     await this.reservaRepo.delete({ agendamento_id: id });
 
     if (a.card_id) {
-      await this.cardRepo.update(a.card_id, { status: CardStatus.ABERTO });
+      // Se o aluno cancela, o card é cancelado. Se o mentor cancela, o card volta a ficar aberto.
+      const novoCardStatus = (papel === Role.ALUNO) ? CardStatus.CANCELADO : CardStatus.ABERTO;
+      await this.cardRepo.update(a.card_id, { status: novoCardStatus });
     }
   }
 
@@ -97,8 +103,7 @@ export class AgendamentosService {
   }
 
   async findHojeGestor(): Promise<Agendamento[]> {
-    const diasSemana = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
-    const hoje = diasSemana[new Date().getDay()];
+    const hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
     return this.agendamentoRepo
       .createQueryBuilder('a')
@@ -106,7 +111,7 @@ export class AgendamentosService {
       .leftJoinAndSelect('card.aluno', 'aluno')
       .leftJoinAndSelect('a.mentor', 'mentor')
       .leftJoinAndSelect('a.ambiente', 'ambiente')
-      .where('a.dia_semana = :hoje', { hoje })
+      .where('a.data = :hoje', { hoje })
       .andWhere('a.status IN (:...statuses)', {
         statuses: [AgendamentoStatus.AGENDADO, AgendamentoStatus.EM_ANDAMENTO, AgendamentoStatus.PENDENTE_GESTOR],
       })
@@ -115,6 +120,10 @@ export class AgendamentosService {
   }
 
   async updateStatus(id: number, status: AgendamentoStatus): Promise<void> {
+    const agendamento = await this.agendamentoRepo.findOne({ where: { id }, relations: ['card'] });
     await this.agendamentoRepo.update(id, { status });
+    if (agendamento && agendamento.card) {
+      await this.cardRepo.update(agendamento.card.id, { status: status as unknown as CardStatus });
+    }
   }
 }

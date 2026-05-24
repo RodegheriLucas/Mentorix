@@ -235,11 +235,6 @@ function CardAluno({ card, onCancel, onEdit, propostas, onAceitarProposta, onRec
       border: isLive ? '1.5px solid var(--secondary)' : '1px solid transparent',
     }}>
       <div style={{ display: 'flex' }}>
-        {/* Status stripe */}
-        <div style={{
-          width: 4, background: stripeColor(card.status),
-          opacity: isDone ? 0.45 : 1, flexShrink: 0,
-        }}/>
         <div style={{ flex: 1, padding: 14 }}>
           {/* Title + Status */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
@@ -267,7 +262,7 @@ function CardAluno({ card, onCancel, onEdit, propostas, onAceitarProposta, onRec
               padding: 10, borderRadius: 12,
               background: isLive ? 'var(--secondary-light)' : 'var(--surface)',
               display: 'flex', alignItems: 'center', gap: 10,
-              marginBottom: (isLive || isAg) ? 10 : 0,
+              marginBottom: 10,
             }}>
               <Avatar initials={initials(mentor.nome)} color={grad} size={36}/>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -280,7 +275,7 @@ function CardAluno({ card, onCancel, onEdit, propostas, onAceitarProposta, onRec
           )}
 
           {/* CheckInOut + instrucoes + WhatsApp */}
-          {(isLive || isAg) && checkinData && mentor && (
+          {(isLive || isAg || isDone) && checkinData && mentor && (
             <>
               <CheckInOutCard c={checkinData}/>
               {ag?.instrucoes_gestor && (
@@ -377,8 +372,8 @@ function CardAluno({ card, onCancel, onEdit, propostas, onAceitarProposta, onRec
               <Link to="/aluno/avaliar" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 marginTop: 10, padding: '11px 14px', borderRadius: 12,
-                background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
-                boxShadow: '0 1px 0 rgba(191,54,12,0.25), 0 6px 16px rgba(230,74,25,0.25)',
+                background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                boxShadow: '0 1px 0 rgba(93,70,184,0.25), 0 6px 16px rgba(93,70,184,0.25)',
                 color: '#fff', fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 13,
                 textDecoration: 'none',
               }}>
@@ -417,7 +412,6 @@ export const MeusCards: React.FC = () => {
   const navigate = useNavigate();
   const [cards, setCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('todas');
   // const [edit, setEdit] = useState<EditState | null>(null);
   const [propostasMap, setPropostasMap] = useState<Record<number, any[]>>({});
 
@@ -442,7 +436,11 @@ export const MeusCards: React.FC = () => {
     fetchPropostas(r.data);
   }).finally(() => setLoading(false));
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(); 
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleAceitarProposta = async (propostaId: number) => {
     if (!confirm('Aceitar esta proposta? Os outros professores serão notificados da recusa.')) return;
@@ -471,25 +469,18 @@ export const MeusCards: React.FC = () => {
     navigate(`/aluno/editar-card/${id}`);
   };
 
-  const filtered = React.useMemo(() => {
-    if (filter === 'mentoria')    return cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status));
-    if (filter === 'matchmaking') return cards.filter((c) => ['ABERTO', 'ACEITO'].includes(c.status));
-    if (filter === 'historico')   return cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status));
-    return cards;
-  }, [cards, filter]);
-
-  const counts = {
-    todas:       cards.length,
-    mentoria:    cards.filter((c) => ['AGENDADO', 'EM_ANDAMENTO', 'PENDENTE_GESTOR'].includes(c.status)).length,
-    matchmaking: cards.filter((c) => ['ABERTO', 'ACEITO'].includes(c.status)).length,
-    historico:   cards.filter((c) => ['CONCLUIDO', 'CANCELADO'].includes(c.status)).length,
-  };
+  const abertos = cards.filter((c) => c.status === 'ABERTO');
 
   return (
     <div className="animate-fadeIn">
       <AlunoHeader nome={user?.nome || 'Usuário'} email={user?.email || ''}/>
 
-      <FilterTabs active={filter} onChange={setFilter} counts={counts}/>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <p className="mx-caption" style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: 0.8,
+          textTransform: 'uppercase', color: 'var(--text-3)',
+        }}>Aguardando mentor · {abertos.length}</p>
+      </div>
 
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -497,7 +488,7 @@ export const MeusCards: React.FC = () => {
         </div>
       )}
 
-      {!loading && filtered.length === 0 && (
+      {!loading && abertos.length === 0 && (
         <div className="mx-card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>
           <div style={{
             width: 52, height: 52, borderRadius: 16, margin: '0 auto 14px',
@@ -509,18 +500,19 @@ export const MeusCards: React.FC = () => {
               <path d="M3 10h18M8 5v5" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
           </div>
-          <p style={{ marginBottom: 16, fontSize: 14, color: 'var(--text-2)' }}>
-            {filter === 'todas' ? 'Nenhuma solicitação criada ainda.' : 'Nada nessa categoria.'}
+          <p style={{ marginBottom: 4, fontSize: 14, color: 'var(--text-2)', fontWeight: 600 }}>
+            Nenhuma solicitação em aberto
           </p>
-          {filter === 'todas' && (
-            <Link to="/aluno/novo-card" className="mx-btn" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 13 }}>
-              Criar primeira solicitação
-            </Link>
-          )}
+          <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 16 }}>
+            Crie uma solicitação e aguarde um mentor compatível.
+          </p>
+          <Link to="/aluno/novo-card" className="mx-btn" style={{ textDecoration: 'none', display: 'inline-block', fontSize: 13 }}>
+            Criar solicitação
+          </Link>
         </div>
       )}
 
-      {!loading && filtered.map((card) => (
+      {!loading && abertos.map((card) => (
         <CardAluno
           key={card.id}
           card={card}

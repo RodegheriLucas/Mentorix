@@ -20,6 +20,7 @@ export const STATUS_META: Record<string, { label: string; bg: string; fg: string
   EM_ANDAMENTO:    { label: 'Em andamento',     bg: 'var(--secondary-light)', fg: 'var(--secondary-dark)', dot: 'var(--secondary)' },
   CONCLUIDO:       { label: 'Concluído',        bg: 'var(--secondary-light)', fg: 'var(--secondary-dark)', dot: 'var(--secondary)' },
   CANCELADO:       { label: 'Cancelado',        bg: '#FFEBEE',              fg: 'var(--accent-dark)',  dot: 'var(--accent-dark)' },
+  EXPIRADO:        { label: 'Expirado',         bg: '#F5F5F5',              fg: '#757575',              dot: '#9E9E9E' },
 };
 
 // ── StatusPill ────────────────────────────────────────────────

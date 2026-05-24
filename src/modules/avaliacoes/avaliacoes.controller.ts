@@ -22,4 +22,9 @@ export class AvaliacoesController {
   pendentes(@CurrentUser() user: any) {
     return this.avaliacoesService.findPendentes(user.id);
   }
+
+  @Get('historico')
+  historico(@CurrentUser() user: any) {
+    return this.avaliacoesService.findHistorico(user.id);
+  }
 }

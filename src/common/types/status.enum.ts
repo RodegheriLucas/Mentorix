@@ -5,6 +5,7 @@ export enum CardStatus {
   EM_ANDAMENTO = 'EM_ANDAMENTO',
   CONCLUIDO = 'CONCLUIDO',
   CANCELADO = 'CANCELADO',
+  EXPIRADO = 'EXPIRADO',
 }
 
 export enum CardCategoria {

@@ -36,6 +36,7 @@ function formatDuration(horas: number): string {
 
 export const AvaliarEncontro: React.FC = () => {
   const [pendentes, setPendentes] = useState<PendenteItem[]>([]);
+  const [historico, setHistorico] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notas, setNotas] = useState<Record<number, number>>({});
   const [depoimentos, setDepoimentos] = useState<Record<number, string>>({});
@@ -43,11 +44,17 @@ export const AvaliarEncontro: React.FC = () => {
   const [done, setDone] = useState<Record<number, boolean>>({});
   const [errors, setErrors] = useState<Record<number, string>>({});
 
-  useEffect(() => {
-    api.get('/avaliacoes/pendentes')
-      .then((r) => setPendentes(r.data))
-      .finally(() => setLoading(false));
-  }, []);
+  const loadData = () => {
+    Promise.all([
+      api.get('/avaliacoes/pendentes'),
+      api.get('/avaliacoes/historico'),
+    ]).then(([p, h]) => {
+      setPendentes(p.data);
+      setHistorico(h.data);
+    }).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { loadData(); }, []);
 
   const submit = async (item: PendenteItem) => {
     const nota = notas[item.id];
@@ -64,6 +71,7 @@ export const AvaliarEncontro: React.FC = () => {
         depoimento: depoimentos[item.id] || undefined,
       });
       setDone((d) => ({ ...d, [item.id]: true }));
+      loadData();
     } catch (err: any) {
       setErrors((e) => ({
         ...e,
@@ -210,7 +218,6 @@ export const AvaliarEncontro: React.FC = () => {
             <div key={h.id} className="glass" style={{
               borderRadius: 'var(--border-radius)', padding: '16px 20px',
               display: 'flex', alignItems: 'center', gap: 16,
-              borderLeft: '3px solid var(--color-success)',
               opacity: 0.75,
             }}>
               <div style={{ fontSize: 22 }}>✅</div>
@@ -223,6 +230,55 @@ export const AvaliarEncontro: React.FC = () => {
               <StarRating value={notas[h.id] || 0} readonly size={16} />
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Histórico de todas as avaliações */}
+      {historico.length > 0 && (
+        <div style={{ marginTop: 32 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Histórico de Avaliações</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {historico.map((h: any) => (
+              <div key={h.avaliacao_id} className="mx-card" style={{ padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 4 }}>
+                      {h.card_titulo}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-2)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span>👤 {h.mentor_nome}</span>
+                      <span style={{ color: 'var(--border)' }}>·</span>
+                      <span>📅 {formatDate(h.data_encontro)}</span>
+                      <span style={{ color: 'var(--border)' }}>·</span>
+                      <span>⏱ {h.hora_inicio?.slice(0, 5)}–{h.hora_fim?.slice(0, 5)}</span>
+                      <span style={{ color: 'var(--border)' }}>·</span>
+                      <span>{formatDuration(Number(h.duracao_horas))}</span>
+                    </div>
+                  </div>
+                  <StarRating value={h.nota} readonly size={18} />
+                </div>
+                {h.card_tags?.length > 0 && (
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {h.card_tags.map((tag: string) => (
+                      <span key={tag} style={{
+                        fontSize: 10, padding: '2px 8px', borderRadius: 999,
+                        background: 'var(--primary-light)', color: 'var(--primary-dark)', fontWeight: 500,
+                      }}>#{tag}</span>
+                    ))}
+                  </div>
+                )}
+                {h.depoimento && (
+                  <div style={{
+                    padding: '10px 12px', borderRadius: 10,
+                    background: 'var(--surface)', fontSize: 13,
+                    color: 'var(--text-2)', lineHeight: 1.5, fontStyle: 'italic',
+                  }}>
+                    "{h.depoimento}"
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

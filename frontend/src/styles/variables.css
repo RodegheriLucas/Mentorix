@@ -19,8 +19,8 @@
   --text-2: #666666;
   --text-3: #9E9E9E;
 
-  --f-head: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
-  --f-body: 'Inter', -apple-system, system-ui, sans-serif;
+  --f-head: 'Plus Jakarta Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, Arial, sans-serif;
+  --f-body: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, Arial, sans-serif;
 
   /* ── Backward-compat aliases (used by older components) */
   --color-bg: #F2EFE9;

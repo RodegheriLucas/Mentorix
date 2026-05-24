@@ -53,9 +53,6 @@ export const AlunoDashboard: React.FC = () => {
       </div>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <Link to="/aluno/novo-card">
-          <Button>+ Nova Solicitação</Button>
-        </Link>
         {pendentes.length > 0 && (
           <Link to="/aluno/avaliar">
             <Button variant="secondary">⭐ Avaliar Encontros ({pendentes.length})</Button>
