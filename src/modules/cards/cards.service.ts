@@ -156,6 +156,9 @@ export class CardsService {
     const card = await this.findById(cardId);
     if (card.aluno_id !== alunoId) throw new ForbiddenException('Sem permissão para editar este card.');
     if (card.status !== CardStatus.ABERTO) throw new BadRequestException('Só é possível editar cards ABERTO.');
+    if (dto.categoria && dto.categoria !== card.categoria) {
+      throw new BadRequestException('Não é possível alterar a categoria de um card após sua criação.');
+    }
 
     if (dto.disponibilidades) {
       this.validateSlots(dto.disponibilidades);
@@ -164,10 +167,19 @@ export class CardsService {
       await this.dispRepo.save(disps);
     }
 
+    if (dto.professores_preferidos !== undefined) {
+      await this.prefRepo.delete({ card_id: cardId });
+      if (dto.professores_preferidos.length > 0) {
+        const prefs = dto.professores_preferidos.map((profId) =>
+          this.prefRepo.create({ card_id: cardId, professor_id: profId }),
+        );
+        await this.prefRepo.save(prefs);
+      }
+    }
+
     await this.cardRepo.update(cardId, {
       titulo: dto.titulo,
       descricao: dto.descricao,
-      categoria: dto.categoria,
       tags: dto.tags,
     });
 

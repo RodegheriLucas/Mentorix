@@ -96,6 +96,38 @@ export const NovoCard: React.FC = () => {
   const [profError, setProfError] = useState('');
 
   useEffect(() => {
+    if (!isEdit) return;
+
+    const loadCard = async () => {
+      try {
+        const { data } = await api.get(`/cards/${id}`);
+        setTitulo(data.titulo || '');
+        setDescricao(data.descricao || '');
+        setCategoria(data.categoria === 'TCC' ? 'TCC' : 'GERAL');
+        setSelectedTopics(data.tags || []);
+        const mappedSlots: DateSlot[] = (data.disponibilidades || []).map((d: any) => ({
+          data: String(d.data).split('T')[0],
+          hora_inicio: String(d.hora_inicio).substring(0, 5),
+          hora_fim: String(d.hora_fim).substring(0, 5),
+        }));
+        setSlots(mappedSlots);
+        if (data.categoria === 'TCC') {
+          const prefIds = (data.preferencias || [])
+            .map((p: any) => p.professor_id ?? p.professor?.id)
+            .filter(Boolean);
+          setProfessoresPreferidos(prefIds);
+        }
+      } catch {
+        setError('Não foi possível carregar os dados do card.');
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadCard();
+  }, [id, isEdit]);
+
+  useEffect(() => {
     if (categoria !== 'TCC' || professores.length > 0 || profLoading) return;
 
     let active = true;
@@ -192,23 +224,38 @@ export const NovoCard: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/cards', {
-        titulo,
-        descricao,
-        categoria,
-        tags: categoria === 'TCC' ? [] : selectedTopics,
-        disponibilidades: categoria === 'GERAL' ? slots : [],
-        professores_preferidos: categoria === 'TCC' ? professoresPreferidos : [],
-      });
-
-      if (categoria === 'TCC' && documento) {
-        const formData = new FormData();
-        formData.append('arquivo', documento);
-        await api.post(`/cards/${res.data.id}/documento`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
+      if (isEdit) {
+        await api.patch(`/cards/${id}`, {
+          titulo,
+          descricao,
+          tags: categoria === 'TCC' ? [] : selectedTopics,
+          disponibilidades: categoria === 'GERAL' ? slots : [],
+          professores_preferidos: categoria === 'TCC' ? professoresPreferidos : [],
         });
+        if (categoria === 'TCC' && documento) {
+          const formData = new FormData();
+          formData.append('arquivo', documento);
+          await api.post(`/cards/${id}/documento`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        }
+      } else {
+        const res = await api.post('/cards', {
+          titulo,
+          descricao,
+          categoria,
+          tags: categoria === 'TCC' ? [] : selectedTopics,
+          disponibilidades: categoria === 'GERAL' ? slots : [],
+          professores_preferidos: categoria === 'TCC' ? professoresPreferidos : [],
+        });
+        if (categoria === 'TCC' && documento) {
+          const formData = new FormData();
+          formData.append('arquivo', documento);
+          await api.post(`/cards/${res.data.id}/documento`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+        }
       }
-
       navigate('/aluno/meus-cards');
     } catch (err: any) {
       const msg = err.response?.data?.message;
@@ -222,6 +269,21 @@ export const NovoCard: React.FC = () => {
     titulo.trim() &&
     descricao.trim() &&
     (categoria === 'TCC' || (selectedTopics.length > 0 && slots.length > 0));
+
+  if (initialLoading) {
+    return (
+      <div className="animate-fadeIn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60 }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-3)' }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            border: '3px solid var(--primary-light)', borderTopColor: 'var(--primary)',
+            animation: 'spin 0.8s linear infinite', margin: '0 auto 12px',
+          }}/>
+          <p style={{ fontSize: 13 }}>Carregando card…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 720 }}>
@@ -264,20 +326,28 @@ export const NovoCard: React.FC = () => {
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setCategoria(cat)}
+                  onClick={() => !isEdit && setCategoria(cat)}
+                  disabled={isEdit}
                   style={{
-                    flex: 1, padding: '12px', borderRadius: 12, cursor: 'pointer',
+                    flex: 1, padding: '12px', borderRadius: 12,
+                    cursor: isEdit ? 'not-allowed' : 'pointer',
                     border: categoria === cat ? '2px solid var(--primary)' : '1px solid var(--border)',
                     background: categoria === cat ? 'var(--primary-light)' : '#fff',
                     color: categoria === cat ? 'var(--primary-dark)' : 'var(--text-2)',
                     fontFamily: 'var(--f-body)', fontWeight: 600, fontSize: 14,
                     transition: 'all 0.15s',
+                    opacity: isEdit && categoria !== cat ? 0.35 : 1,
                   }}
                 >
                   {cat === 'GERAL' ? 'Geral' : 'TCC'}
                 </button>
               ))}
             </div>
+            {isEdit && (
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 6 }}>
+                A categoria não pode ser alterada após a criação do card.
+              </p>
+            )}
           </Field>
 
           {/* Assuntos — visível apenas para GERAL */}
