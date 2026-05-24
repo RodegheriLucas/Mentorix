@@ -30,6 +30,13 @@ export class AgendamentosController {
     return this.agendamentosService.findPendentesGestor();
   }
 
+  @Get('futuros')
+  @UseGuards(RolesGuard)
+  @Roles(Role.GESTOR)
+  futuros() {
+    return this.agendamentosService.findFuturosGestor();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.agendamentosService.findById(id);
