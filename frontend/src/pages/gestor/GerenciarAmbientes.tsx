@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { MxSelect } from '../../components/ui/DesignSystem';
 import api from '../../config/api';
 import { Button } from '../../components/ui/Button';
@@ -37,8 +38,13 @@ export const GerenciarAmbientes: React.FC = () => {
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 800 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>Ambientes</h1>
+      <PageHeader 
+        title="Ambientes" 
+        subtitle="Gerencie as salas e espaços comuns da instituição." 
+        showAvatar 
+      />
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
         <Button onClick={() => setModal(true)}>+ Novo Ambiente</Button>
       </div>
 

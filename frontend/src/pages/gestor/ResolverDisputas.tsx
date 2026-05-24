@@ -3,6 +3,7 @@ import api from '../../config/api';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { PageHeader } from '../../components/ui/PageHeader';
 
 export const ResolverDisputas: React.FC = () => {
   const [disputas, setDisputas] = useState<any[]>([]);
@@ -35,10 +36,11 @@ export const ResolverDisputas: React.FC = () => {
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 800 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Resolver Disputas</h1>
-      <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 24 }}>
-        Contestações abertas por mentores que realizaram sessões não avaliadas pelo aluno.
-      </p>
+      <PageHeader 
+        title="Resolver Disputas"
+        subtitle="Contestações abertas por mentores que realizaram sessões não avaliadas pelo aluno."
+        showAvatar
+      />
 
       {disputas.length === 0 ? (
         <div className="glass" style={{ borderRadius: 'var(--border-radius)', padding: 48, textAlign: 'center', color: 'var(--color-text-muted)' }}>

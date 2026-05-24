@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import { StatusPill, Avatar, TopicBadge, WhatsAppButton, CheckInOutCard, MxLogo } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { PageHeader } from '../../components/ui/PageHeader';
 import { useAuth } from '../../contexts/AuthContext';
 
 const AVATAR_GRADIENTS = [
@@ -25,75 +26,6 @@ function initials(name: string) {
   return name?.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '??';
 }
 
-function stripeColor(status: string) {
-  if (status === 'EM_ANDAMENTO') return 'var(--secondary)';
-  if (status === 'AGENDADO') return 'var(--accent)';
-  if (status === 'PENDENTE_GESTOR') return '#E0A800';
-  if (status === 'CONCLUIDO') return 'var(--secondary)';
-  if (status === 'CANCELADO') return 'var(--accent-dark)';
-  return 'var(--primary)';
-}
-
-const FILTER_TABS = [
-  { id: 'todas',      label: 'Todas' },
-  { id: 'mentoria',   label: 'Mentorias' },
-  { id: 'matchmaking',label: 'Matchmaking' },
-  { id: 'historico',  label: 'Histórico' },
-];
-
-function AlunoHeader({ nome, email }: { nome: string; email: string }) {
-  const firstName = nome.split(' ')[0];
-  const ini = initials(nome);
-  return (
-    <div style={{ padding: '12px 0 14px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <MxLogo size={20}/>
-          <span style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 16, letterSpacing: -0.2, color: 'var(--primary-dark)' }}>
-            mentorix
-          </span>
-          <span style={{
-            fontSize: 9, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase',
-            color: 'var(--primary-dark)', background: 'var(--primary-light)',
-            padding: '2px 6px', borderRadius: 6,
-          }}>Aluno</span>
-        </div>
-        <Avatar initials={ini} size={32} color={mentorGradient(nome)}/>
-      </div>
-      <h1 className="mx-h1" style={{ fontSize: 24 }}>Olá, {firstName}.</h1>
-      <p className="mx-caption" style={{ marginTop: 2 }}>{email}</p>
-    </div>
-  );
-}
-
-function FilterTabs({ active, onChange, counts }: {
-  active: string; onChange: (id: string) => void; counts: Record<string, number>;
-}) {
-  return (
-    <div style={{ display: 'flex', gap: 4, marginBottom: 14, overflowX: 'auto', scrollbarWidth: 'none' }}>
-      {FILTER_TABS.map((t) => {
-        const a = active === t.id;
-        return (
-          <button key={t.id} onClick={() => onChange(t.id)} style={{
-            flexShrink: 0, padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
-            border: a ? '1px solid var(--primary)' : '1px solid var(--border)',
-            background: a ? 'var(--primary)' : '#fff',
-            color: a ? '#fff' : 'var(--text)',
-            fontFamily: 'var(--f-body)', fontSize: 12, fontWeight: 500,
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-          }}>
-            {t.label}
-            <span style={{
-              fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 999,
-              color: a ? '#fff' : 'var(--text-3)',
-              background: a ? 'rgba(255,255,255,0.18)' : 'var(--surface)',
-            }}>{counts[t.id] ?? 0}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 // ─── Propostas recebidas (TCC sem preferência) ────────────────────────────────
 function PropostasSection({ card, propostas, onAceitar, onRecusar }: {
@@ -474,7 +406,10 @@ export const MeusCards: React.FC = () => {
 
   return (
     <div className="animate-fadeIn">
-      <AlunoHeader nome={user?.nome || 'Usuário'} email={user?.email || ''}/>
+      <PageHeader 
+        title={`Olá, ${user?.nome?.split(' ')[0] || 'Aluno'}.`} 
+        subtitle={user?.email || ''} 
+      />
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <p className="mx-caption" style={{

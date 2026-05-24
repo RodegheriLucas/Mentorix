@@ -185,7 +185,16 @@ export const MobileTabBar: React.FC = () => {
               transition: 'box-shadow 0.15s, background 0.15s',
             }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/>
+                {user.papel === 'ALUNO' ? (
+                  <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"/>
+                ) : user.papel === 'GESTOR' ? (
+                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M7 11h2v2H7zM11 11h2v2h-2zM15 11h2v2h-2z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                ) : (
+                  <>
+                    <path d="M9 3L3 5v16l6-2 6 2 6-2V3l-6 2-6-2z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/>
+                    <path d="M9 3v16M15 5v16" stroke="#fff" strokeWidth="2"/>
+                  </>
+                )}
               </svg>
             </div>
           )}

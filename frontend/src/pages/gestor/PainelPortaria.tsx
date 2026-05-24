@@ -4,6 +4,8 @@ import { Avatar, MxSelect } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { useAuth } from '../../contexts/AuthContext';
+import { PageHeader } from '../../components/ui/PageHeader';
+
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
@@ -724,7 +726,7 @@ export const PainelPortaria: React.FC = () => {
   const statsItems = [
     { label: 'Total hoje', value: agendamentos.length, color: 'var(--primary)', bg: 'var(--primary-light)', icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" fill="none"/>
+        <rect x="3" y="4" width="18" height="17" rx="3" stroke="currentColor" strokeWidth="2" fill="none"/>
         <path d="M3 10h18M8 4v6M16 4v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
       </svg>
     )},
@@ -735,7 +737,7 @@ export const PainelPortaria: React.FC = () => {
       </svg>
     )},
     { label: 'Em andamento', value: emAndamento.length, color: 'var(--secondary)', bg: 'var(--secondary-light)', icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <svg width="16" height="15" viewBox="0 0 24 24" fill="none">
         <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     )},
@@ -743,26 +745,6 @@ export const PainelPortaria: React.FC = () => {
 
   const portariaPanel = (
     <div>
-      <SectionBadge
-        label="Painel de Portaria"
-        sub={new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
-        icon={
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="#fff" strokeWidth="1.8" fill="none"/>
-            <path d="M9 22V12h6v10" stroke="#fff" strokeWidth="1.8"/>
-          </svg>
-        }
-      />
-
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: isDesktop ? 26 : 22, color: 'var(--text)', margin: 0, letterSpacing: -0.5 }}>
-          Olá, {user?.nome?.split(' ')[0]}!
-        </h1>
-        <p className="mx-caption" style={{ marginTop: 4, fontSize: 13 }}>
-          Aqui estão os agendamentos de hoje que precisam da sua atenção.
-        </p>
-      </div>
-
       {/* Stats */}
       <div style={{ display: 'flex', gap: isDesktop ? 12 : 8, marginBottom: 24 }}>
         {statsItems.map((s) => (
@@ -788,7 +770,7 @@ export const PainelPortaria: React.FC = () => {
         </div>
       ) : agendamentos.length === 0 ? (
         <div className="mx-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 14px', display: 'block' }}>
+          <svg width="48" height="40" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 14px', display: 'block' }}>
             <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="var(--text-3)" strokeWidth="1.5" fill="none"/>
             <path d="M9 22V12h6v10" stroke="var(--text-3)" strokeWidth="1.5"/>
           </svg>
@@ -902,6 +884,11 @@ export const PainelPortaria: React.FC = () => {
 
   return (
     <div className="animate-fadeIn">
+      <PageHeader
+        title={`Olá, ${user?.nome?.split(' ')[0]}!`}
+        subtitle="Aqui estão os agendamentos de hoje."
+        showAvatar
+      />
 
       {/* ── Mobile: tab switcher ── */}
       {!isDesktop && (
