@@ -24,6 +24,10 @@ const icn = (id: string, active: boolean) => {
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 22h20L12 2z" stroke={c} strokeWidth={w} strokeLinejoin="round"/><path d="M12 9v6M12 18v.5" stroke={c} strokeWidth={w} strokeLinecap="round"/></svg>;
     case 'conta':
       return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke={c} strokeWidth={w}/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={c} strokeWidth={w} strokeLinecap="round"/></svg>;
+    case 'portaria':
+      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke={c} strokeWidth={w} fill="none" strokeLinejoin="round"/><path d="M9 22V12h6v10" stroke={c} strokeWidth={w}/></svg>;
+    case 'ambientes':
+      return <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke={c} strokeWidth={w} fill="none"/><path d="M3 12h18M8 5v14M16 5v14" stroke={c} strokeWidth={w}/></svg>;
     default:
       return null;
   }
@@ -40,8 +44,8 @@ const ALUNO_TABS: TabItem[] = [
 
 const MENTOR_TABS: TabItem[] = [
   { to: '/mentor',              label: 'Início',    icon: 'home'     },
-  { to: '/mentor/feed',         label: 'Descobrir', icon: 'feed'     },
   { to: '/mentor/agendamentos', label: 'Agenda',    icon: 'agenda'   },
+  { to: '/mentor/feed',         label: 'Descobrir', icon: 'feed'     }, // index 2 = FAB
   { to: '/mentor/contestacao',  label: 'Disputa',   icon: 'disputas' },
   { to: '/mentor/conta',        label: 'Conta',     icon: 'conta'    },
 ];
@@ -53,7 +57,13 @@ const PROFESSOR_TABS: TabItem[] = [
   { to: '/professor/conta',        label: 'Conta',     icon: 'conta'  },
 ];
 
-const FAB_INDEX: Record<string, number> = { ALUNO: 2 };
+const GESTOR_TABS: TabItem[] = [
+  { to: '/gestor/ambientes', label: 'Ambientes', icon: 'ambientes' },
+  { to: '/gestor/portaria',  label: 'Portaria',  icon: 'portaria'  }, // index 1 = FAB
+  { to: '/gestor/disputas',  label: 'Disputas',  icon: 'disputas'  },
+];
+
+const FAB_INDEX: Record<string, number> = { ALUNO: 2, ALUNO_MENTOR: 2, GESTOR: 1 };
 
 export const MobileTabBar: React.FC = () => {
   const { user } = useAuth();
@@ -64,6 +74,7 @@ export const MobileTabBar: React.FC = () => {
     user.papel === 'ALUNO'            ? ALUNO_TABS :
     user.papel === 'ALUNO_MENTOR'     ? MENTOR_TABS :
     user.papel === 'PROFESSOR_MENTOR' ? PROFESSOR_TABS :
+    user.papel === 'GESTOR'           ? GESTOR_TABS :
     null;
 
   if (!tabs) return null;
@@ -108,7 +119,7 @@ export const MobileTabBar: React.FC = () => {
                 fontFamily: 'var(--f-body)',
                 lineHeight: 1,
               }}>
-                Nova
+                {tab.label}
               </span>
             </div>
           );

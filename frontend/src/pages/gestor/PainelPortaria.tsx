@@ -5,6 +5,17 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { DatePicker } from '../../components/ui/DatePicker';
 import { useAuth } from '../../contexts/AuthContext';
 
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isDesktop;
+}
+
 // ── helpers ────────────────────────────────────────────────────
 function initials(name: string) {
   return name?.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '??';
@@ -208,8 +219,10 @@ function InstrucoesModal({ open, ag, onClose, onSend, saving }: {
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200,
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        width: 480, background: '#fff', borderRadius: 18, padding: 28,
+        width: 'min(480px, calc(100vw - 24px))', background: '#fff', borderRadius: 18,
+        padding: 'clamp(16px, 5vw, 28px)',
         boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+        maxHeight: '90dvh', overflowY: 'auto',
       }}>
         <div style={{
           fontFamily: 'var(--f-body)', textTransform: 'uppercase', fontSize: 10, fontWeight: 700,
@@ -368,7 +381,7 @@ function UpcomingCard({ ag }: { ag: any }) {
 }
 
 // ── UpcomingPanel (painel direito) ─────────────────────────────
-function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
+function UpcomingPanel({ refreshSignal, isDesktop }: { refreshSignal: number; isDesktop: boolean }) {
   const [allAg, setAllAg] = useState<any[]>([]);
   const [ambientes, setAmbientes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -434,9 +447,7 @@ function UpcomingPanel({ refreshSignal }: { refreshSignal: number }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      position: 'sticky', top: 0,
-      maxHeight: 'calc(100vh - 56px)',
-      overflow: 'hidden',
+      ...(isDesktop ? { position: 'sticky', top: 0, maxHeight: 'calc(100vh - 56px)', overflow: 'hidden' } : {}),
     }}>
       {/* ── Cabeçalho do painel ── */}
       <div style={{ paddingBottom: 16 }}>
@@ -702,87 +713,162 @@ export const PainelPortaria: React.FC = () => {
     if (ag.status === 'EM_ANDAMENTO') { doCheckout(ag); return; }
   };
 
+  const isDesktop = useIsDesktop();
+  const [activeTab,   setActiveTab]   = useState<'portaria' | 'agenda'>('portaria');
+  const [kanbanTab,   setKanbanTab]   = useState<'pendente' | 'aguardando' | 'ocupada'>('pendente');
+
   const pendentes   = agendamentos.filter((a) => a.status === 'PENDENTE_GESTOR');
   const agendados   = agendamentos.filter((a) => a.status === 'AGENDADO');
   const emAndamento = agendamentos.filter((a) => a.status === 'EM_ANDAMENTO');
 
-  return (
-    <div className="animate-fadeIn" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, alignItems: 'start' }}>
+  const statsItems = [
+    { label: 'Total hoje', value: agendamentos.length, color: 'var(--primary)', bg: 'var(--primary-light)', icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" fill="none"/>
+        <path d="M3 10h18M8 4v6M16 4v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label: 'Pendentes', value: pendentes.length, color: '#7A5B00', bg: '#FFF7E0', icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+        <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    )},
+    { label: 'Em andamento', value: emAndamento.length, color: 'var(--secondary)', bg: 'var(--secondary-light)', icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    )},
+  ];
 
-      {/* ── ESQUERDA: Portaria de hoje ── */}
-      <div style={{ paddingRight: 32, borderRight: '1.5px solid var(--border)' }}>
+  const portariaPanel = (
+    <div>
+      <SectionBadge
+        label="Painel de Portaria"
+        sub={new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+        icon={
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="#fff" strokeWidth="1.8" fill="none"/>
+            <path d="M9 22V12h6v10" stroke="#fff" strokeWidth="1.8"/>
+          </svg>
+        }
+      />
 
-        {/* Cabeçalho da seção */}
-        <SectionBadge
-          label="Painel de Portaria"
-          sub={new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
-          icon={
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="#fff" strokeWidth="1.8" fill="none"/>
-              <path d="M9 22V12h6v10" stroke="#fff" strokeWidth="1.8"/>
-            </svg>
-          }
-        />
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: isDesktop ? 26 : 22, color: 'var(--text)', margin: 0, letterSpacing: -0.5 }}>
+          Olá, {user?.nome?.split(' ')[0]}!
+        </h1>
+        <p className="mx-caption" style={{ marginTop: 4, fontSize: 13 }}>
+          Aqui estão os agendamentos de hoje que precisam da sua atenção.
+        </p>
+      </div>
 
-        {/* Saudação */}
-        <div style={{ marginBottom: 20 }}>
-          <h1 style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 26, color: 'var(--text)', margin: 0, letterSpacing: -0.5 }}>
-            Olá, {user?.nome?.split(' ')[0]}!
-          </h1>
-          <p className="mx-caption" style={{ marginTop: 4, fontSize: 13 }}>
-            Aqui estão os agendamentos de hoje que precisam da sua atenção.
-          </p>
-        </div>
-
-        {/* Linha de stats */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-          {[
-            { label: 'Total hoje', value: agendamentos.length, color: 'var(--primary)', bg: 'var(--primary-light)', icon: (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" fill="none"/>
-                <path d="M3 10h18M8 4v6M16 4v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            )},
-            { label: 'Pendentes', value: pendentes.length, color: '#7A5B00', bg: '#FFF7E0', icon: (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-                <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            )},
-            { label: 'Em andamento', value: emAndamento.length, color: 'var(--secondary)', bg: 'var(--secondary-light)', icon: (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )},
-          ].map((s) => (
-            <div key={s.label} className="mx-card" style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color }}>
-                {s.icon}
-              </div>
-              <div>
-                <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--f-head)', color: s.color, lineHeight: 1 }}>{s.value}</div>
-                <div style={{ marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10, color: 'var(--text-3)' }}>{s.label}</div>
-              </div>
+      {/* Stats */}
+      <div style={{ display: 'flex', gap: isDesktop ? 12 : 8, marginBottom: 24 }}>
+        {statsItems.map((s) => (
+          <div key={s.label} className="mx-card" style={{
+            padding: isDesktop ? '16px 18px' : '12px 10px',
+            flex: 1, display: 'flex', flexDirection: 'column', gap: isDesktop ? 10 : 7,
+          }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color }}>
+              {s.icon}
             </div>
-          ))}
-        </div>
+            <div>
+              <div style={{ fontSize: isDesktop ? 28 : 22, fontWeight: 700, fontFamily: 'var(--f-head)', color: s.color, lineHeight: 1 }}>{s.value}</div>
+              <div style={{ marginTop: 3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.3, fontSize: 9, color: 'var(--text-3)' }}>{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        {/* Kanban */}
-        {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-            {[1, 2, 3].map((i) => <Skeleton key={i} height={280}/>)}
+      {/* Kanban */}
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[1, 2, 3].map((i) => <Skeleton key={i} height={isDesktop ? 280 : 120}/>)}
+        </div>
+      ) : agendamentos.length === 0 ? (
+        <div className="mx-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 14px', display: 'block' }}>
+            <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="var(--text-3)" strokeWidth="1.5" fill="none"/>
+            <path d="M9 22V12h6v10" stroke="var(--text-3)" strokeWidth="1.5"/>
+          </svg>
+          <p style={{ fontWeight: 600, marginBottom: 4 }}>Nenhuma mentoria agendada para hoje</p>
+          <p style={{ fontSize: 12 }}>A portaria está livre por ora.</p>
+        </div>
+      ) : isDesktop ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div>
+            <ColumnHeader title="Pendente de Instruções" count={pendentes.length} tone="yellow"/>
+            {pendentes.map((ag) => (
+              <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={false} checkinLoading={!!checkinLoading[ag.id]}/>
+            ))}
+            {pendentes.length === 0 && <EmptyCol label="Nada aguardando 🎉"/>}
           </div>
-        ) : agendamentos.length === 0 ? (
-          <div className="mx-card" style={{ padding: 48, textAlign: 'center', color: 'var(--text-3)' }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ margin: '0 auto 14px', display: 'block' }}>
-              <path d="M3 9L12 3l9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="var(--text-3)" strokeWidth="1.5" fill="none"/>
-              <path d="M9 22V12h6v10" stroke="var(--text-3)" strokeWidth="1.5"/>
-            </svg>
-            <p style={{ fontWeight: 600, marginBottom: 4 }}>Nenhuma mentoria agendada para hoje</p>
-            <p style={{ fontSize: 12 }}>A portaria está livre por ora.</p>
+          <div>
+            <ColumnHeader title="Aguardando check-in" count={agendados.length} tone="accent"/>
+            {agendados.map((ag) => (
+              <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={flashing === ag.id} checkinLoading={!!checkinLoading[ag.id]}/>
+            ))}
+            {agendados.length === 0 && <EmptyCol label="Tudo em andamento"/>}
           </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div>
+            <ColumnHeader title="Sala ocupada" count={emAndamento.length} tone="green"/>
+            {emAndamento.map((ag) => (
+              <AgendamentoCard key={ag.id} ag={ag} onAction={handleAction} flashing={false} checkinLoading={!!checkinLoading[ag.id]}/>
+            ))}
+            {emAndamento.length === 0 && <EmptyCol label="Nenhuma sala em uso"/>}
+          </div>
+        </div>
+      ) : (
+        /* Mobile: switcher de colunas kanban */
+        <div>
+          {/* Tab switcher */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+            {([
+              { key: 'pendente',   label: 'Pendente',   count: pendentes.length,   bg: '#FFF7E0',                  fg: '#7A5B00',               dot: '#E0A800'              },
+              { key: 'aguardando', label: 'Aguardando', count: agendados.length,   bg: 'var(--accent-light)',      fg: 'var(--accent-dark)',     dot: 'var(--accent)'        },
+              { key: 'ocupada',    label: 'Ocupada',    count: emAndamento.length, bg: 'var(--secondary-light)',   fg: 'var(--secondary-dark)',  dot: 'var(--secondary)'     },
+            ] as const).map(({ key, label, count, bg, fg, dot }) => {
+              const active = kanbanTab === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setKanbanTab(key)}
+                  style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    gap: 4, padding: '9px 4px', borderRadius: 12, border: 'none',
+                    cursor: 'pointer', transition: 'all 0.15s',
+                    background: active ? bg : '#fff',
+                    outline: active ? 'none' : '1px solid var(--border)',
+                    boxShadow: active ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{
+                      width: 7, height: 7, borderRadius: '50%',
+                      background: active ? dot : 'var(--border)',
+                      display: 'inline-block', flexShrink: 0,
+                      transition: 'background 0.15s',
+                    }}/>
+                    <span style={{
+                      fontSize: 11, fontWeight: active ? 700 : 500,
+                      color: active ? fg : 'var(--text-3)',
+                      fontFamily: 'var(--f-head)',
+                    }}>{label}</span>
+                  </div>
+                  <span style={{
+                    fontSize: 18, fontWeight: 700,
+                    fontFamily: 'var(--f-head)',
+                    color: active ? fg : 'var(--text-3)',
+                    lineHeight: 1,
+                  }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Coluna ativa */}
+          {kanbanTab === 'pendente' && (
             <div>
               <ColumnHeader title="Pendente de Instruções" count={pendentes.length} tone="yellow"/>
               {pendentes.map((ag) => (
@@ -790,6 +876,8 @@ export const PainelPortaria: React.FC = () => {
               ))}
               {pendentes.length === 0 && <EmptyCol label="Nada aguardando 🎉"/>}
             </div>
+          )}
+          {kanbanTab === 'aguardando' && (
             <div>
               <ColumnHeader title="Aguardando check-in" count={agendados.length} tone="accent"/>
               {agendados.map((ag) => (
@@ -797,6 +885,8 @@ export const PainelPortaria: React.FC = () => {
               ))}
               {agendados.length === 0 && <EmptyCol label="Tudo em andamento"/>}
             </div>
+          )}
+          {kanbanTab === 'ocupada' && (
             <div>
               <ColumnHeader title="Sala ocupada" count={emAndamento.length} tone="green"/>
               {emAndamento.map((ag) => (
@@ -804,14 +894,58 @@ export const PainelPortaria: React.FC = () => {
               ))}
               {emAndamento.length === 0 && <EmptyCol label="Nenhuma sala em uso"/>}
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
-      {/* ── DIREITA: Agenda de Salas ── */}
-      <div style={{ paddingLeft: 32 }}>
-        <UpcomingPanel refreshSignal={rightRefresh}/>
-      </div>
+  return (
+    <div className="animate-fadeIn">
+
+      {/* ── Mobile: tab switcher ── */}
+      {!isDesktop && (
+        <div style={{
+          display: 'flex', gap: 4, marginBottom: 20,
+          background: 'rgba(0,0,0,0.05)', borderRadius: 12, padding: 4,
+        }}>
+          {(['portaria', 'agenda'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                flex: 1, padding: '9px 0', borderRadius: 9, border: 'none',
+                cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                fontFamily: 'var(--f-head)',
+                background: activeTab === tab ? '#fff' : 'transparent',
+                color: activeTab === tab ? 'var(--primary)' : 'var(--text-3)',
+                boxShadow: activeTab === tab ? '0 1px 4px rgba(0,0,0,0.10)' : 'none',
+                transition: 'all 0.15s',
+              }}
+            >
+              {tab === 'portaria' ? 'Portaria' : 'Agenda de Salas'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Desktop: 2 colunas / Mobile: painel ativo ── */}
+      {isDesktop ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, alignItems: 'start' }}>
+          <div style={{ paddingRight: 32, borderRight: '1.5px solid var(--border)' }}>
+            {portariaPanel}
+          </div>
+          <div style={{ paddingLeft: 32 }}>
+            <UpcomingPanel refreshSignal={rightRefresh} isDesktop={isDesktop}/>
+          </div>
+        </div>
+      ) : (
+        <div>
+          {activeTab === 'portaria' ? portariaPanel : (
+            <UpcomingPanel refreshSignal={rightRefresh} isDesktop={isDesktop}/>
+          )}
+        </div>
+      )}
 
       <InstrucoesModal
         open={!!instrucaoModal}
