@@ -19,7 +19,7 @@ export const AlunoDashboard: React.FC = () => {
       api.get('/agendamentos'),
       api.get('/avaliacoes/pendentes'),
     ]).then(([c, a, p]) => {
-      setCards(c.data);
+      setCards([...c.data].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()));
       setAgendamentos(a.data);
       setPendentes(p.data);
     }).finally(() => setLoading(false));

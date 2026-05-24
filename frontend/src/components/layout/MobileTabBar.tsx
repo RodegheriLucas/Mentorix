@@ -95,7 +95,7 @@ export const MobileTabBar: React.FC = () => {
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
       borderTop: '0.5px solid rgba(60,60,67,0.15)',
-      zIndex: 10,
+      zIndex: 1100,
     }}>
       {tabs.map((tab, index) => {
         const isFab = index === fabIdx;
