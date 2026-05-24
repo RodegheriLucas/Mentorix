@@ -73,7 +73,9 @@ function MentorCalendar({ agendamentos, loading, isProfessor }: { agendamentos: 
     agendamentos
       .filter((a) => ACTIVE_STATUSES.includes(a.status))
       .forEach((ag) => {
-        const key = (ag.data || '').split('T')[0];
+        // TCC orientations have no scheduled date — fall back to criado_em
+        const raw = ag.data || ag.criado_em || '';
+        const key = raw.split('T')[0];
         if (!key) return;
         if (!map[key]) map[key] = [];
         map[key].push(ag);
@@ -308,8 +310,9 @@ export const MentorHome: React.FC = () => {
     })
     .slice(0, 3);
 
-  const horas     = Number(user?.horas_complementares || 0);
-  const firstName = user?.nome?.split(' ')[0] ?? '';
+  const horas       = Number(user?.horas_complementares || 0);
+  const concluidas  = agendamentos.filter((a) => a.status === 'CONCLUIDO').length;
+  const firstName   = user?.nome?.split(' ')[0] ?? '';
 
   return (
     <div className="animate-fadeIn" style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -334,18 +337,32 @@ export const MentorHome: React.FC = () => {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
-          <StatCard
-            label="Horas"
-            value={`${horas.toFixed(1)}h`}
-            color="var(--primary)"
-            bg="#ECE9F9"
-            icon={
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
-                <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-            }
-          />
+          {isProfessor ? (
+            <StatCard
+              label="Concluídas"
+              value={concluidas}
+              color="var(--primary)"
+              bg="#ECE9F9"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+            />
+          ) : (
+            <StatCard
+              label="Horas"
+              value={`${horas.toFixed(1)}h`}
+              color="var(--primary)"
+              bg="#ECE9F9"
+              icon={
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
+                  <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              }
+            />
+          )}
           <StatCard
             label="Ativas"
             value={ativos.length}

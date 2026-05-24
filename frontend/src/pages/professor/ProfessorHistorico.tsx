@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import { Avatar } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -29,6 +30,13 @@ function fmtDate(iso: string) {
     .toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function fmtDateTime(iso: string) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
 function fmtDuration(inicio: string, fim: string) {
   if (!inicio || !fim) return '';
   const [hi, mi] = inicio.split(':').map(Number);
@@ -41,6 +49,7 @@ function fmtDuration(inicio: string, fim: string) {
 }
 
 export const ProfessorHistorico: React.FC = () => {
+  const navigate = useNavigate();
   const [agendamentos, setAgendamentos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -190,6 +199,36 @@ export const ProfessorHistorico: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                {ag.card?.categoria === 'TCC' && ag.atualizado_em && (
+                  <div style={{
+                    fontSize: 11, color: 'var(--text-3)', marginTop: 12, marginBottom: 4,
+                    display: 'flex', alignItems: 'center', gap: 5,
+                  }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
+                      <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                    Concluído em {fmtDateTime(ag.atualizado_em)}
+                  </div>
+                )}
+                {ag.card?.categoria === 'TCC' && (
+                  <button
+                    onClick={() => navigate(`/professor/orientacao/${ag.id}`)}
+                    style={{
+                      marginTop: 12, width: '100%', padding: '8px 14px', borderRadius: 10,
+                      border: '1.5px solid var(--primary)', background: 'var(--primary-light)',
+                      cursor: 'pointer', fontFamily: 'var(--f-body)', fontSize: 12,
+                      color: 'var(--primary-dark)', fontWeight: 600,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                    </svg>
+                    Ver detalhes e chat
+                  </button>
+                )}
               </div>
             );
           })}

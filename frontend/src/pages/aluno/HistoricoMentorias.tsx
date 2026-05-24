@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../config/api';
 import { StatusPill, Avatar, TopicBadge, MxLogo } from '../../components/ui/DesignSystem';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -61,6 +62,13 @@ function formatDate(dateStr: string): string {
   return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('pt-BR', {
     weekday: 'long', day: '2-digit', month: 'long',
   });
+}
+
+function fmtDateTime(iso: string) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDuration(horas: number): string {
@@ -392,9 +400,11 @@ const HISTORICO_STATUSES = ['CONCLUIDO', 'CANCELADO', 'EXPIRADO'];
 
 export const HistoricoMentorias: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [pendentes, setPendentes] = useState<PendenteItem[]>([]);
   const [historico, setHistorico] = useState<AvaliacaoHistorico[]>([]);
   const [cards, setCards] = useState<any[]>([]);
+  const [tccConcluidos, setTccConcluidos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [notas, setNotas] = useState<Record<number, number>>({});
@@ -409,10 +419,16 @@ export const HistoricoMentorias: React.FC = () => {
       api.get('/avaliacoes/pendentes'),
       api.get('/avaliacoes/historico'),
       api.get('/cards/meus'),
-    ]).then(([p, h, c]) => {
+      api.get('/agendamentos'),
+    ]).then(([p, h, c, ag]) => {
       setPendentes([...p.data].sort((a, b) => new Date(b.data_encontro).getTime() - new Date(a.data_encontro).getTime()));
       setHistorico([...h.data].sort((a, b) => new Date(b.avaliado_em).getTime() - new Date(a.avaliado_em).getTime()));
       setCards([...c.data].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()));
+      setTccConcluidos(
+        (ag.data as any[])
+          .filter((a) => a.card?.categoria === 'TCC' && a.status === 'CONCLUIDO')
+          .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime()),
+      );
     }).finally(() => setLoading(false));
   };
 
@@ -451,7 +467,7 @@ export const HistoricoMentorias: React.FC = () => {
 
   const cancelados = cards.filter((c) => c.status === 'CANCELADO');
   const expirados = cards.filter((c) => c.status === 'EXPIRADO');
-  const totalRegistros = pendentes.length + historico.length + cancelados.length + expirados.length;
+  const totalRegistros = pendentes.length + historico.length + tccConcluidos.length + cancelados.length + expirados.length;
   const vazio = !loading && totalRegistros === 0;
 
   return (
@@ -530,6 +546,59 @@ export const HistoricoMentorias: React.FC = () => {
               onToggle={() => toggle(`h-${item.avaliacao_id}`)}
             />
           ))}
+        </div>
+      )}
+
+      {!loading && tccConcluidos.length > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <SectionLabel label="Orientações TCC" count={tccConcluidos.length} color="var(--secondary-dark)" />
+          {tccConcluidos.map((ag) => {
+            const professorNome = ag.mentor?.nome || 'Orientador';
+            const professorIni = professorNome.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+            return (
+              <div key={ag.id} className="mx-card" style={{ overflow: 'hidden', marginBottom: 12 }}>
+                <div style={{ flex: 1, padding: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontFamily: 'var(--f-head)', fontWeight: 700, fontSize: 15, lineHeight: 1.25, color: 'var(--text)', flex: 1 }}>
+                      {ag.card?.titulo || 'Orientação TCC'}
+                    </div>
+                    <StatusPill status="CONCLUIDO" size="sm" />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <Avatar initials={professorIni} size={26} />
+                    <p className="mx-caption" style={{ margin: 0 }}>Orientador: {professorNome}</p>
+                  </div>
+                  {ag.atualizado_em && (
+                    <div style={{
+                      fontSize: 11, color: 'var(--text-3)', marginBottom: 6,
+                      display: 'flex', alignItems: 'center', gap: 5,
+                    }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
+                        <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                      Concluído em {fmtDateTime(ag.atualizado_em)}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => navigate(`/aluno/orientacao/${ag.id}`)}
+                    style={{
+                      width: '100%', padding: '8px 14px', borderRadius: 10,
+                      border: '1.5px solid var(--primary)', background: 'var(--primary-light)',
+                      cursor: 'pointer', fontFamily: 'var(--f-body)', fontSize: 12,
+                      color: 'var(--primary-dark)', fontWeight: 600,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                    </svg>
+                    Ver detalhes e chat
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
