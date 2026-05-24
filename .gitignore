@@ -15,3 +15,4 @@ frontend/dist/
 backend.log
 backend-err.log
 CLAUDE.md
+GEMINI.md

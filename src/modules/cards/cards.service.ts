@@ -2,7 +2,7 @@ import {
   Injectable, NotFoundException, BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Card } from './entities/card.entity';
 import { Disponibilidade } from './entities/disponibilidade.entity';
 import { CreateCardDto } from './dto/create-card.dto';
@@ -32,6 +32,20 @@ export class CardsService {
   }
 
   async create(alunoId: number, dto: CreateCardDto, ip?: string): Promise<Card> {
+    if (dto.categoria === CardCategoria.TCC) {
+      const activeTccCard = await this.cardRepo.findOne({
+        where: {
+          aluno_id: alunoId,
+          categoria: CardCategoria.TCC,
+          status: In([CardStatus.ABERTO, CardStatus.ACEITO, CardStatus.AGENDADO, CardStatus.EM_ANDAMENTO]),
+        },
+      });
+
+      if (activeTccCard) {
+        throw new BadRequestException('Você já possui uma solicitação de TCC ativa.');
+      }
+    }
+
     if (dto.categoria === CardCategoria.GERAL && dto.disponibilidades.length === 0) {
       throw new BadRequestException('Informe ao menos uma disponibilidade para cards Gerais.');
     }
