@@ -61,6 +61,7 @@ export const OrientacaoDetalhe: React.FC = () => {
   const [confirmEncerrar, setConfirmEncerrar] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const lastMsgIdRef = useRef<number>(0);
   const isProfessor = user?.papel === 'PROFESSOR_MENTOR';
 
   useEffect(() => {
@@ -69,13 +70,29 @@ export const OrientacaoDetalhe: React.FC = () => {
       .finally(() => setLoadingAg(false));
   }, [agId]);
 
-  const carregarMsgs = () =>
-    api.get(`/chat/${agId}`)
-      .then((r) => setMensagens(r.data))
-      .finally(() => setLoadingMsgs(false));
+  const carregarMsgs = (silent = false) =>
+    api.get(`/chat/${agId}`).then((r) => {
+      const novas: Mensagem[] = r.data;
+      if (!silent) setLoadingMsgs(false);
+      setMensagens((prev) => {
+        const topId = novas.length ? novas[novas.length - 1].id : 0;
+        if (topId === lastMsgIdRef.current && prev.length === novas.length) return prev;
+        lastMsgIdRef.current = topId;
+        return novas;
+      });
+    });
 
+  // Carga inicial
   useEffect(() => { carregarMsgs(); }, [agId]);
 
+  // Polling a cada 3 s — para quando a orientação está concluída
+  useEffect(() => {
+    if (agendamento?.status === 'CONCLUIDO') return;
+    const timer = setInterval(() => carregarMsgs(true), 3000);
+    return () => clearInterval(timer);
+  }, [agId, agendamento?.status]);
+
+  // Rola até a última mensagem só quando chegam mensagens novas
   useEffect(() => {
     if (!loadingMsgs) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [mensagens, loadingMsgs]);
