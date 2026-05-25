@@ -206,10 +206,9 @@ function ContraPropostaModal({ card, onClose, onSent }: { card: any; onClose: ()
 
 // ─── TCC Card (professor view) ────────────────────────────────────────────────
 function TccCard({
-  item, mentorTopics, onAceitar, onEnviarProposta, onNegar, propostaEnviada,
+  item, onAceitar, onEnviarProposta, onNegar, propostaEnviada,
 }: {
   item: { card: any; is_preferido: boolean; tem_preferencias: boolean };
-  mentorTopics: string[];
   onAceitar: (card: any) => void;
   onEnviarProposta: (card: any) => void;
   onNegar: (card: any) => void;
@@ -219,30 +218,18 @@ function TccCard({
   const [expanded, setExpanded] = useState(false);
 
   const cardTopics: string[] = card.tags || [];
-  const ratio = matchRatio(mentorTopics, cardTopics);
-  const hotTopics = cardTopics.filter((t) => mentorTopics.includes(t));
-  const hasMentor = mentorTopics.length > 0;
-  const isFullMatch = hasMentor && ratio >= 1;
-
-  const topColor = interpolateHeatColor(hasMentor ? ratio : 0);
-  const whiteText = hasMentor && needsWhiteText(ratio);
 
   const clr = {
-    label: whiteText ? 'rgba(255,255,255,0.78)' : 'var(--primary-dark)',
-    pct: whiteText ? '#fff' : 'var(--primary-dark)',
-    name: whiteText ? '#fff' : 'var(--text)',
-    meta: whiteText ? 'rgba(255,255,255,0.7)' : 'var(--text-2)',
-    barTrack: whiteText ? 'rgba(255,255,255,0.25)' : 'rgba(93,70,184,0.15)',
-    barFill: whiteText ? 'rgba(255,255,255,0.92)' : '#5D46B8',
-    chevron: whiteText ? '#fff' : 'var(--primary)',
-    chevronBg: whiteText ? 'rgba(255,255,255,0.18)' : 'rgba(93,70,184,0.08)',
-    chevronBorder: whiteText ? 'rgba(255,255,255,0.3)' : 'rgba(93,70,184,0.2)',
-    ring: whiteText ? 'rgba(255,255,255,0.45)' : 'rgba(93,70,184,0.3)',
-    bodyTitle: whiteText ? '#fff' : 'var(--text)',
-    bodyDesc: whiteText ? 'rgba(255,255,255,0.8)' : 'var(--text-2)',
-    footerBorder: whiteText ? 'rgba(255,255,255,0.18)' : 'var(--border)',
-    footerIcon: whiteText ? 'rgba(255,255,255,0.65)' : 'var(--text-3)',
-    footerCaption: whiteText ? 'rgba(255,255,255,0.7)' : undefined,
+    name: 'var(--text)',
+    meta: 'var(--text-2)',
+    chevron: 'var(--primary)',
+    chevronBg: 'rgba(93,70,184,0.08)',
+    chevronBorder: 'rgba(93,70,184,0.2)',
+    ring: 'rgba(93,70,184,0.3)',
+    bodyTitle: 'var(--text)',
+    bodyDesc: 'var(--text-2)',
+    footerBorder: 'var(--border)',
+    footerIcon: 'var(--text-3)',
   };
 
   const aluno = card.aluno || {};
@@ -257,12 +244,8 @@ function TccCard({
       onClick={() => setExpanded((v) => !v)}
       style={{
         overflow: 'hidden', cursor: 'pointer',
-        background: isFullMatch
-          ? 'linear-gradient(135deg, #5D46B8 0%, #3A2885 100%)'
-          : `linear-gradient(180deg, ${topColor} 0%, #ffffff 75%)`,
-        border: isFullMatch
-          ? '1.5px solid rgba(255,255,255,0.15)'
-          : expanded ? `1.5px solid ${topColor}` : '1px solid var(--border)',
+        background: '#ffffff',
+        border: expanded ? '1.5px solid var(--primary)' : '1px solid var(--border)',
         transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
         boxShadow: expanded
           ? '0 8px 28px rgba(93,70,184,0.18), 0 1px 2px rgba(18,18,18,0.06)'
@@ -272,27 +255,16 @@ function TccCard({
     >
       {/* Header */}
       <div style={{ padding: '14px 14px 0' }}>
-        {/* Match row */}
-        <div style={{ marginBottom: 10 }}>
-          {hasMentor ? (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: clr.label, fontFamily: 'var(--f-body)' }}>
-                  {heatLabel(ratio)}
-                </span>
-                <span style={{ fontFamily: 'var(--f-head)', fontWeight: 800, fontSize: 14, color: clr.pct, letterSpacing: -0.3 }}>
-                  {Math.round(ratio * 100)}%
-                </span>
-              </div>
-              <div style={{ height: 4, borderRadius: 99, background: clr.barTrack, overflow: 'hidden' }}>
-                <div style={{ width: `${ratio * 100}%`, height: '100%', borderRadius: 99, background: clr.barFill, transition: 'width .5s ease' }} />
-              </div>
-            </>
-          ) : (
-            <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-3)', fontFamily: 'var(--f-body)' }}>
-              Nova solicitação
-            </span>
-          )}
+        {/* Tag de tipo de solicitação + chevron (sem match — alunos de TCC não escolhem tags) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-3)', fontFamily: 'var(--f-body)' }}>
+            Nova solicitação
+          </span>
+          <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: clr.chevronBg, border: `1px solid ${clr.chevronBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.22s' }}>
+              <path d="M6 9l6 6 6-6" stroke={clr.chevron} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         </div>
 
         {/* Preferido banner */}
@@ -320,11 +292,6 @@ function TccCard({
               <div style={{ fontSize: 11, color: clr.meta, marginTop: 2, fontFamily: 'var(--f-body)' }}>{metaLine}</div>
             )}
           </div>
-          <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: clr.chevronBg, border: `1px solid ${clr.chevronBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.22s' }}>
-              <path d="M6 9l6 6 6-6" stroke={clr.chevron} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
         </div>
       </div>
 
@@ -341,12 +308,7 @@ function TccCard({
         {cardTopics.length > 0 && (
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
             {cardTopics.map((t) => (
-              <TopicBadge key={t} tone={hotTopics.includes(t) ? 'accent' : 'gray'}>
-                {hotTopics.includes(t) && (
-                  <FaFire size={9} color="var(--accent)" style={{ flexShrink: 0 }} />
-                )}
-                #{t}
-              </TopicBadge>
+              <TopicBadge key={t} tone="gray">#{t}</TopicBadge>
             ))}
           </div>
         )}
@@ -368,7 +330,7 @@ function TccCard({
             <rect x="3" y="4" width="18" height="18" rx="3" stroke={clr.footerIcon} strokeWidth="1.8" fill="none" />
             <path d="M3 10h18M8 4v6M16 4v6" stroke={clr.footerIcon} strokeWidth="1.8" strokeLinecap="round" />
           </svg>
-          <span className="mx-caption" style={{ fontSize: 11, ...(clr.footerCaption && { color: clr.footerCaption }) }}>
+          <span className="mx-caption" style={{ fontSize: 11 }}>
             {slotCount} sala{slotCount !== 1 ? 's' : ''} disponível{slotCount !== 1 ? 'is' : ''}
           </span>
         </div>
@@ -728,7 +690,6 @@ export const FeedMentoria: React.FC = () => {
                     <TccCard
                       key={item.card.id}
                       item={item}
-                      mentorTopics={mentorTopics}
                       onAceitar={aceitarTcc}
                       onEnviarProposta={setPropostaCard}
                       onNegar={negarTcc}
@@ -751,7 +712,6 @@ export const FeedMentoria: React.FC = () => {
                     <TccCard
                       key={item.card.id}
                       item={item}
-                      mentorTopics={mentorTopics}
                       onAceitar={aceitarTcc}
                       onEnviarProposta={setPropostaCard}
                       onNegar={negarTcc}
