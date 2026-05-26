@@ -3,7 +3,7 @@
 
 ## 🏛️ 1. Identificação da Equipe
 
-- Equipe Mentora
+- Equipe Mentorix
 - João Otávio, Lucas R. Rocha, João Victor de Paula e Marcelo Cauan / 7º período 
 - **Link do Repositório (GitHub/GitLab):** ta privado
 - **Link do Rascunho/Design (Figma/Lovable/Excalidraw):** Link do drive
